@@ -1,12 +1,11 @@
 #include <iostream>
-#include "example.h"
+#include "log/log.h"
 using std::cout;
 using std::endl;
 
 int main(int argc, char *argv[])
 {
     cout << "Hello YAMQ." << endl;
-
-    IsPrime(111);
+    LOG(WARNING) << "Hello YAMQ.";
     return 0;
 }

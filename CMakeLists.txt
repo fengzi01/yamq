@@ -41,11 +41,11 @@ endif()
 set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/src/)
 include_directories(${COMMON_INCLUDES})
 
-file(GLOB SRC_LIB_FILES ${PROJECT_SOURCE_DIR}/src/lib/*.cpp)
+#file(GLOB SRC_LIB_FILES ${PROJECT_SOURCE_DIR}/src/lib/*.cpp)
 #add_library(project1_lib ${SRC_LIB_FILES})
 #add_library(project1_lib project1.cpp)
 
-file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
+file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 # Key idea: SEPARATE OUT your main() function into its own file so it can be its
 # own executable. Separating out main() means you can add this library to be
@@ -75,7 +75,8 @@ if (test)
   file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp)
 
   # 这个里面必须有CMakeLists.txt
-  add_subdirectory(/home/fengyuwei/code/github/googletest gtest)
+  # add_subdirectory(/home/fengyuwei/code/github/googletest gtest)
+  add_subdirectory(/Users/fengyuwei/code/googletest gtest)
   include_directories(${GTEST_INCLUDE_DIR})
 
   ##############
