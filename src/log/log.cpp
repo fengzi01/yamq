@@ -20,6 +20,8 @@ void LogMessage::Init(const char* file,
                         int line,
                         LogSeverity severity,
                         void (LogMessage::*send_method)()) {
+
+    IDEBUG("file:%s,line:%d,ser:%d,method:%p\n",file,line,severity,send_method);
     // 初始化data
     _allocated = new LogMessageData;
     _data = _allocated;
@@ -35,12 +37,13 @@ void LogMessage::Init(const char* file,
     _data->fullname = file;
     _data->basename = const_basename(file);
     _data->line = line;
-    //_data->severity = severity;
+    _data->severity = severity;
     _data->flushed = false;
     _data->num_chars_to_log = 0;
 
 	if (line != -1) {
 		stream() << LogSeverityNames[severity][0]
+            << setw(4) << _data->tm_time.tm_year + 1900
 			<< setw(2) << 1+_data->tm_time.tm_mon
 			<< setw(2) << _data->tm_time.tm_mday
 			<< ' '
@@ -121,7 +124,6 @@ inline void LogDestination::LogToAllLogfiles(LogSeverity severity,
     int i = severity;
     for (;i >= 0; --i) {
         // 挨个写入文件
-        I_DEBUG("i:%d\n",i);
         LogDestination::MaybeLogToLogfile(i,timestamp,message,len);
     }
 }
@@ -179,8 +181,6 @@ void LogFileObject::Write(bool force_flush,
         const char* message,
         int message_len) {
 
-    I_DEBUG("log write: %s,len: %d,time:%d\n",message,message_len,timestamp);
-    I_DEBUG("file is NULL: %d\n",_file==NULL);
     if (_file == NULL) {
         if (_base_filename.empty()) {
             // 生成默认文件名
@@ -188,17 +188,15 @@ void LogFileObject::Write(bool force_flush,
             string stripped_filename(GetProgramShortName());
             stripped_filename = stripped_filename + ".log." + 
                 LogSeverityNames[_severity] + ".";
-            string dir("."); // 当前目录
+            string dir("./log"); // 当前目录
             _base_filename = dir + "/" + stripped_filename;
-
-            I_DEBUG("_base_filename:%s\n",_base_filename.c_str());
         }
-        I_DEBUG("_base_filename:%s\n",_base_filename.c_str());
         bool success = false;
         ostringstream time_pid_stream;
         struct ::tm tm_time;
         localtime_r(&timestamp, &tm_time);
         time_pid_stream.fill('0');
+
         time_pid_stream << 1900+tm_time.tm_year
             << setw(2) << 1+tm_time.tm_mon
             << setw(2) << tm_time.tm_mday
@@ -209,8 +207,8 @@ void LogFileObject::Write(bool force_flush,
             << '.'
             << getpid();
         time_pid_stream.fill('0');
+
         const string& time_pid_string = time_pid_stream.str();
-        I_DEBUG("create log file.");
         if (CreateLogfile(time_pid_string)) {
             success = true;
         }

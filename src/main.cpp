@@ -7,10 +7,10 @@ int main(int argc, char *argv[])
 {
     yamq::InitLog(argv[0]);
     cout << "Hello YAMQ." << endl;
-    LOG(WARNING) << "Hello YAMQ.";
-    LOG(WARNING) << "Hello YAMQ.";
-    LOG(WARNING) << "Hello YAMQ.";
-    LOG(WARNING) << "Hello YAMQ.";
+    LOG(INFO) << "Hello YAMQ.INFO";
+    LOG(WARNING) << "Hello YAMQ.WARNING";
+    LOG(ERROR) << "Hello YAMQ.ERROR";
+    LOG(FATAL) << "Hello YAMQ.FATAL";
     yamq::ShutdownLog();
     return 0;
 }

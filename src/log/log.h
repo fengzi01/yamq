@@ -8,7 +8,7 @@
 using std::string;
 
 // 内部debug使用
-#define I_DEBUG(msg...) do{printf("[DEBUG]> " msg);}while(0) 
+#define IDEBUG(msg...) do{printf("[DEBUG]> " msg);}while(0) 
 
 namespace yamq {
 const int LOG_INFO = 0, LOG_WARNING = 1, LOG_ERROR = 2, LOG_FATAL = 3,
@@ -18,10 +18,15 @@ const char*const LogSeverityNames[NUM_SEVERITIES] = {
 };
 
 #define LOG(severity) COMPACT_LOG_ ## severity.stream()
+
 #define COMPACT_LOG_INFO yamq::log::LogMessage( \
-    __FILE__, __LINE__)
+    __FILE__, __LINE__, yamq::LOG_INFO)
 #define COMPACT_LOG_WARNING yamq::log::LogMessage( \
     __FILE__, __LINE__, yamq::LOG_WARNING)
+#define COMPACT_LOG_ERROR yamq::log::LogMessage( \
+    __FILE__, __LINE__, yamq::LOG_ERROR)
+#define COMPACT_LOG_FATAL yamq::log::LogMessage( \
+    __FILE__, __LINE__, yamq::LOG_FATAL)
 
 namespace log {
     typedef int LogSeverity;
@@ -151,8 +156,8 @@ namespace log {
 
         private:
             string _base_filename;
-            FILE *_file;
             LogSeverity _severity;
+            FILE *_file;
             unsigned int _file_length;
 
             bool CreateLogfile(const string& time_pid_string);
