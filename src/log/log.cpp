@@ -8,32 +8,8 @@
 
 using std::ostringstream;
 using std::setw;
+using std::setfill;
 using namespace yamq::log;
-
-struct LogMessage::LogMessageData {
-    // LogMessageData();
-    LogMessageData()
-        : stream(message_text, LogMessage::maxLogMessageLen+1, 0) {
-        }
-    char message_text[LogMessage::maxLogMessageLen+1];
-    int nums_chars_to_log;
-
-    LogStream stream;
-
-    LogSeverity severity; 
-
-    void (LogMessage::*send_method)();
-
-    
-    time_t timestamp;
-
-    const char* basename;
-    const char* fullname;
-    int line;
-
-    bool flushed;
-    bool first_fatal;
-};
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity) {
     Init(file, line, severity, &LogMessage::SendToLog);
@@ -49,19 +25,38 @@ void LogMessage::Init(const char* file,
     _data = _allocated;
 
     stream().fill('0');
-
     _data->send_method = send_method;
-    // 时间
+
     WallTime now = WallTime_Now();
     _data->timestamp = static_cast<time_t>(now);
+	localtime_r(&_data->timestamp, &_data->tm_time);
+	int usecs = static_cast<int>((now - _data->timestamp) * 1000000);
 
     _data->fullname = file;
     _data->basename = const_basename(file);
     _data->line = line;
+    //_data->severity = severity;
     _data->flushed = false;
+    _data->num_chars_to_log = 0;
 
-    _data->nums_chars_to_log = 0;
+	if (line != -1) {
+		stream() << LogSeverityNames[severity][0]
+			<< setw(2) << 1+_data->tm_time.tm_mon
+			<< setw(2) << _data->tm_time.tm_mday
+			<< ' '
+			<< setw(2) << _data->tm_time.tm_hour  << ':'
+			<< setw(2) << _data->tm_time.tm_min   << ':'
+			<< setw(2) << _data->tm_time.tm_sec   << "."
+			<< setw(6) << usecs
+			<< ' '
+			<< setfill(' ') << setw(5)
+			<< static_cast<unsigned int>(GetTID()) << setfill('0')
+			<< ' '
+			<< _data->basename << ':' << _data->line << "] ";
+	}
+	_data->num_prefix_chars = _data->stream.pcount();
 }
+
 // 析构函数中Flush输出到文件中
 LogMessage::~LogMessage() {
     Flush();
@@ -77,14 +72,41 @@ void LogMessage::Flush() {
     }
 
     // 字符串长度
-    _data->nums_chars_to_log = _data->stream.pcount();
+    _data->num_chars_to_log = _data->stream.pcount();
 
-    // do flush
+	bool append_newline =
+		(_data->message_text[_data->num_chars_to_log-1] != '\n');
+	char original_final_char = '\0';
+
+	// If we do need to add a \n, we'll do it by violating the memory of the
+	// ostrstream buffer.  This is quick, and we'll make sure to undo our
+	// modification before anything else is done with the ostrstream.  It
+	// would be preferable not to do things this way, but it seems to be
+	// the best way to deal with this.
+	if (append_newline) {
+		original_final_char = _data->message_text[_data->num_chars_to_log];
+		_data->message_text[_data->num_chars_to_log++] = '\n';
+	} 
+
     // TODO Mutex Lock
     (this->*(_data->send_method))(); 
     LogDestination::WaitForSinks(_data);
 
+	if (append_newline) {
+		// Fix the ostrstream back how it was before we screwed with it.
+		// It's 99.44% certain that we don't need to worry about doing this.
+		_data->message_text[_data->num_chars_to_log-1] = original_final_char;
+	}
+
     _data->flushed = true;
+}
+
+// will been import By Init
+void LogMessage::SendToLog() {
+    LogDestination::LogToAllLogfiles(_data->severity,
+            _data->timestamp,
+            _data->message_text,
+            _data->num_chars_to_log);
 }
 
 LogDestination::LogDestination(LogSeverity severity,
@@ -93,20 +115,13 @@ LogDestination::LogDestination(LogSeverity severity,
     _logger(&_fileobject) {
     }
 
-// will been import By Init
-void LogMessage::SendToLog() {
-    LogDestination::LogToAllLogfiles(_data->severity,
-            _data->timestamp,
-            _data->message_text,
-            _data->nums_chars_to_log);
-}
-
 inline void LogDestination::LogToAllLogfiles(LogSeverity severity,
         time_t timestamp,
         const char* message, size_t len) {
     int i = severity;
     for (;i >= 0; --i) {
         // 挨个写入文件
+        I_DEBUG("i:%d\n",i);
         LogDestination::MaybeLogToLogfile(i,timestamp,message,len);
     }
 }
@@ -134,9 +149,11 @@ void LogDestination::WaitForSinks(LogMessage::LogMessageData *data) {
 
 LogFileObject::LogFileObject(LogSeverity severity, const char* base_filename):
     _base_filename((base_filename != NULL) ? base_filename : ""),
-    _severity(severity) {
+    _severity(severity),
+    _file(NULL) {
         assert(severity >= 0);
         assert(severity < NUM_SEVERITIES);
+        assert(_file == NULL);
 }
 
 LogFileObject::~LogFileObject() {
@@ -150,13 +167,10 @@ bool LogFileObject::CreateLogfile(const string &time_pid_string) {
     string string_filename = _base_filename+time_pid_string;
     const char *filename = string_filename.c_str();
 
-    printf("filename:%s\n",filename);
-
     int fd = open(filename,O_WRONLY | O_CREAT | O_EXCL, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     if (fd < 0) {return false;}
 
     _file = fdopen(fd,"a");
-
     return true;
 }
 
@@ -164,58 +178,79 @@ void LogFileObject::Write(bool force_flush,
         time_t timestamp,
         const char* message,
         int message_len) {
-    bool success = false;
-    ostringstream time_pid_stream;
-    struct ::tm tm_time;
-    localtime_r(&timestamp, &tm_time);
-    time_pid_stream.fill('0');
-    time_pid_stream << 1900+tm_time.tm_year
-        << setw(2) << 1+tm_time.tm_mon
-        << setw(2) << tm_time.tm_mday
-        << '-'
-        << setw(2) << tm_time.tm_hour
-        << setw(2) << tm_time.tm_min
-        << setw(2) << tm_time.tm_sec
-        << '.'
-        << getpid();
-    time_pid_stream.fill('0');
-    const string& time_pid_string = time_pid_stream.str();
-    if (CreateLogfile(time_pid_string)) {
-        success = true;
+
+    I_DEBUG("log write: %s,len: %d,time:%d\n",message,message_len,timestamp);
+    I_DEBUG("file is NULL: %d\n",_file==NULL);
+    if (_file == NULL) {
+        if (_base_filename.empty()) {
+            // 生成默认文件名
+            // webserver.examplehost.root.log.INFO.19990817-150000.4354
+            string stripped_filename(GetProgramShortName());
+            stripped_filename = stripped_filename + ".log." + 
+                LogSeverityNames[_severity] + ".";
+            string dir("."); // 当前目录
+            _base_filename = dir + "/" + stripped_filename;
+
+            I_DEBUG("_base_filename:%s\n",_base_filename.c_str());
+        }
+        I_DEBUG("_base_filename:%s\n",_base_filename.c_str());
+        bool success = false;
+        ostringstream time_pid_stream;
+        struct ::tm tm_time;
+        localtime_r(&timestamp, &tm_time);
+        time_pid_stream.fill('0');
+        time_pid_stream << 1900+tm_time.tm_year
+            << setw(2) << 1+tm_time.tm_mon
+            << setw(2) << tm_time.tm_mday
+            << '-'
+            << setw(2) << tm_time.tm_hour
+            << setw(2) << tm_time.tm_min
+            << setw(2) << tm_time.tm_sec
+            << '.'
+            << getpid();
+        time_pid_stream.fill('0');
+        const string& time_pid_string = time_pid_stream.str();
+        I_DEBUG("create log file.");
+        if (CreateLogfile(time_pid_string)) {
+            success = true;
+        }
+
+        ostringstream file_header_stream;
+        file_header_stream.fill('0');
+        file_header_stream << "Log file created at: "
+            << 1900+tm_time.tm_year << '/'
+            << setw(2) << 1+tm_time.tm_mon << '/'
+            << setw(2) << tm_time.tm_mday
+            << ' '
+            << setw(2) << tm_time.tm_hour << ':'
+            << setw(2) << tm_time.tm_min << ':'
+            << setw(2) << tm_time.tm_sec << '\n'
+            << "Running on machine: "
+            //<< LogDestination::hostname() << '\n'
+            << "xxx" << "\n"
+            << "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu "
+            << "threadid file:line] msg" << '\n';
+        const string& file_header_string = file_header_stream.str();
+
+        const int header_len = file_header_string.size();
+        fwrite(file_header_string.data(), 1, header_len, _file);
+        _file_length += header_len;
     }
-
-    string stripped_filename;
-    string dir("tmp");
-    _base_filename = dir + "/" + stripped_filename;
-
-    printf("base_filename:%s\n",_base_filename.c_str());
-
-    ostringstream file_header_stream;
-    file_header_stream.fill('0');
-    file_header_stream << "Log file created at: "
-        << 1900+tm_time.tm_year << '/'
-        << setw(2) << 1+tm_time.tm_mon << '/'
-        << setw(2) << tm_time.tm_mday
-        << ' '
-        << setw(2) << tm_time.tm_hour << ':'
-        << setw(2) << tm_time.tm_min << ':'
-        << setw(2) << tm_time.tm_sec << '\n'
-        << "Running on machine: "
-        //<< LogDestination::hostname() << '\n'
-        << "xxx" << "\n"
-        << "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu "
-        << "threadid file:line] msg" << '\n';
-    const string& file_header_string = file_header_stream.str();
-
-    const int header_len = file_header_string.size();
-    fwrite(file_header_string.data(), 1, header_len, _file);
-    _file_length += header_len;
 
     fwrite(message, 1, message_len, _file);
     _file_length += message_len;
 }
 
 void LogFileObject::Flush() {
+}
+
+
+void yamq::InitLog(const char* argv0) {
+    InitLogUtilities(argv0);
+}
+
+void yamq::ShutdownLog() {
+    ShutdownLogUtilities();
 }
 
 

@@ -7,9 +7,15 @@
 #include <string>
 using std::string;
 
+// 内部debug使用
+#define I_DEBUG(msg...) do{printf("[DEBUG]> " msg);}while(0) 
+
 namespace yamq {
 const int LOG_INFO = 0, LOG_WARNING = 1, LOG_ERROR = 2, LOG_FATAL = 3,
       NUM_SEVERITIES = 4;
+const char*const LogSeverityNames[NUM_SEVERITIES] = {
+    "INFO", "WARNING", "ERROR", "FATAL"
+};
 
 #define LOG(severity) COMPACT_LOG_ ## severity.stream()
 #define COMPACT_LOG_INFO yamq::log::LogMessage( \
@@ -25,30 +31,30 @@ namespace log {
     class Logger;
     class LogFileObject;
 
-    // 其实就是个streambuf
-    class LogStreamBuf : public std::streambuf {
-        public:
-        LogStreamBuf(char *buf, int len) {
-            // 设置pointer,保留最后两个字符
-            // setbase setend
-            setp(buf, buf + len - 2);
-        }
-
-        // This effectively ignores overflow.
-        virtual int_type overflow(int_type ch) {
-            return ch;
-        }
-        // 缓冲区长度
-        size_t pcount() const { return pptr() - pbase(); }
-        // 缓冲区开始
-        char* pbase() const { return std::streambuf::pbase(); }
-    };
 
     /**
      * 消息类
      */
     class LogMessage {
         public:
+            // 其实就是个streambuf
+            class LogStreamBuf : public std::streambuf {
+                public:
+                    LogStreamBuf(char *buf, int len) {
+                        // 设置pointer,保留最后两个字符
+                        // setbase setend
+                        setp(buf, buf + len - 2);
+                    }
+
+                    // This effectively ignores overflow.
+                    virtual int_type overflow(int_type ch) {
+                        return ch;
+                    }
+                    // 缓冲区长度
+                    size_t pcount() const { return pptr() - pbase(); }
+                    // 缓冲区开始
+                    char* pbase() const { return std::streambuf::pbase(); }
+            };
         class LogStream : public std::ostream {
             public:
                 LogStream(char *buf, int len, int ctr)
@@ -72,7 +78,31 @@ namespace log {
                 LogStream& operator=(const LogStream&);
         };
         public:
-        struct LogMessageData;
+        static const size_t maxLogMessageLen = 30000;
+        struct LogMessageData {
+            LogMessageData()
+                : stream(message_text, LogMessage::maxLogMessageLen+1, 0) {
+                    // constructor
+                }
+
+			int num_prefix_chars;
+            char message_text[LogMessage::maxLogMessageLen + 1];
+            int num_chars_to_log;
+
+            LogSeverity severity; 
+            void (LogMessage::*send_method)();
+
+            time_t timestamp;
+			struct ::tm tm_time;
+
+            const char* basename;
+            const char* fullname;
+            int line;
+
+            LogStream stream;
+            bool flushed;
+            bool first_fatal;
+        };
 
         public:
         LogMessage();
@@ -86,7 +116,6 @@ namespace log {
 
         // only passed as SendMethod arguments to other LogMessage methods:
         void SendToLog();
-        static const size_t maxLogMessageLen = 30000;
 
         private: 
         void Init(const char* file, int line, LogSeverity severity,
@@ -180,11 +209,8 @@ namespace log {
             char _msg_buf[2];
     };
 } //log
-}//yamq
-namespace {
+
 void InitLog(const char* argv0);
-
 void ShutdownLog();
-
-} // namespace
+}//yamq
 #endif /* ifndef _YAMQ_LOG_H */
