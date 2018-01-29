@@ -5,12 +5,8 @@ using std::endl;
 
 int main(int argc, char *argv[])
 {
-    yamq::InitLog(argv[0]);
+    yamq::log::InitLog();
     cout << "Hello YAMQ." << endl;
-    LOG(INFO) << "Hello YAMQ.INFO";
-    LOG(WARNING) << "Hello YAMQ.WARNING";
-    LOG(ERROR) << "Hello YAMQ.ERROR";
-    LOG(FATAL) << "Hello YAMQ.FATAL";
-    yamq::ShutdownLog();
+    yamq::log::ShutdownLog();
     return 0;
 }
