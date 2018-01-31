@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 2.8.10)
+cmake_minimum_required(VERSION 2.8)
 
 # Options. Turn on with 'cmake -Dmyvarname=ON'.
-option(BUILD_UNIT_TESTS "Whether to build unit tests" OFF)
+option(test "Whether to build unit tests" OFF)
 
 # Make PROJECT_SOURCE_DIR, PROJECT_BINARY_DIR, and PROJECT_NAME available.
 set(PROJECT_NAME "yamq")
@@ -49,7 +49,8 @@ add_subdirectory(src)
 #TARGET_LINK_LIBRARIES(${PROJECT_NAME}-static ${LOG_LIB}-static "-static")
 
 # TEST
-if(BUILD_UNIT_TESTS)
+if(test)
+    enable_testing()
     add_subdirectory(test)
 endif()
 
