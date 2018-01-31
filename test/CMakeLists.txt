@@ -55,7 +55,7 @@ foreach(LOG_UT ${LOG_UNITTESTS})
         )
 
     ## gtest
-    add_dependencies(${LOG_UT_WE} googletest)
+    add_dependencies(${LOG_UT_WE} just_for_test)
     target_link_libraries(${LOG_UT_WE}
         libgtest.a libgtest_main.a
         ${DYNAMIC_LIB})
