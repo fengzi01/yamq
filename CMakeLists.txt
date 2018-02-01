@@ -33,7 +33,7 @@ file(GLOB_RECURSE RPC_SOURCES "${PROJECT_SOURCE_DIR}/rpc/*.cpp")
 file(GLOB_RECURSE DI_SOURCES "${PROJECT_SOURCE_DIR}/di/*.cpp")
 file(GLOB_RECURSE SRC_SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
-set(LOG_LIB_NAME "yqlog")
+set(LOG_LIB_NAME "yamq_log")
 
 # submodule
 #add_executable(${PROJECT_NAME} ${SRC_SOURCES})

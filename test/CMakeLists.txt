@@ -1,34 +1,10 @@
 enable_testing()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/test")
 
-# gtest
-#add_subdirectory(/home/fengyuwei/code/github/googletest gtest)
-#add_subdirectory(/Users/fengyuwei/code/googletest gtest)
-#include_directories(${GTEST_INCLUDE_DIR})
-
-##################################
-# Download and install GoogleTest
-include(ExternalProject)
-ExternalProject_Add(googletest
-    URL https://github.com/google/googletest/archive/release-1.7.0.zip
-    URL_HASH SHA256=b58cb7547a28b2c718d1e38aee18a3659c9e3ff52440297e965f5edffe34b6d0
-    PREFIX ${CMAKE_BINARY_DIR}/googletest
-    INSTALL_COMMAND ""
-    )
-ExternalProject_Get_Property(googletest source_dir binary_dir)
-set(GTEST_INCLUDE_DIRS ${source_dir}/include)
-set(GTEST_LINK_DIRS ${binary_dir})
-add_library(gtest STATIC IMPORTED)
-add_library(gtest_main STATIC IMPORTED)
-add_library(gmock STATIC IMPORTED)
-add_dependencies(gtest googletest)
-add_dependencies(gtest_main googletest)
-add_dependencies(gmock googletest)
-
-include_directories(
-    ${GTEST_INCLUDE_DIRS}
-    )
-link_directories(${GTEST_LINK_DIRS})
+# Download gtest
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+include(DownloadGtest)
+include_directories(${GTEST_INCLUDE_DIR})
 
 # just for test
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/just_for_test.cpp
@@ -39,11 +15,10 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/just_for_test.cpp
     )
 add_executable(just_for_test
     ${CMAKE_CURRENT_BINARY_DIR}/just_for_test.cpp
-)
-target_link_libraries(just_for_test
-    libgtest.a libgtest_main.a
     )
-add_dependencies(just_for_test googletest)
+target_link_libraries(just_for_test
+    gtest gtest_main
+    )
 
 # unittest
 file(GLOB LOG_UNITTESTS "log_*_unittest.cpp")
@@ -55,10 +30,8 @@ foreach(LOG_UT ${LOG_UNITTESTS})
         )
 
     ## gtest
-    add_dependencies(${LOG_UT_WE} just_for_test)
     target_link_libraries(${LOG_UT_WE}
-        libgtest.a libgtest_main.a
-        ${DYNAMIC_LIB})
+        gtest gtest_main)
 
     add_test(NAME ${LOG_UT_WE} COMMAND ${LOG_UT_WE})
 endforeach()
