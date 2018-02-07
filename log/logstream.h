@@ -42,8 +42,8 @@ namespace log {
 class LogStream {
     typedef LogStream self;
     public:
-        static const size_t maxLogMessageLen = 3000;
-        typedef internal::FixedBuffer<maxLogMessageLen> Buffer;
+        static const size_t kMaxLogMessageLen = 3000;
+        typedef internal::FixedBuffer<kMaxLogMessageLen> Buffer;
 
         /* 重载<<运算符 */
         self& operator<<(bool v) {

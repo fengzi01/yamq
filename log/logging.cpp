@@ -2,18 +2,27 @@
 #include "utilities.h"
 
 namespace yamq {
-namespace log {
 
-void defaultOutputFunc(const char* msg,size_t len) {
+void defaultLoggingSave(const char* msg,size_t len) {
     /* 打印到标准错误输出 */
     fwrite(msg,len,1,stderr);
 }
-void defaultFlushFunc(){
+void defaultLoggingFlush() {
     fflush(stderr);
 }
-MsgOutputFunc g_outputFunc = defaultOutputFunc;
-MsgFlushFunc g_flushFunc  = defaultFlushFunc;
 
+LoggingSaveFunc g_loggingSaveFunc = defaultLoggingSave;
+LoggingFlushFunc g_loggingFlushFunc = defaultLoggingFlush;
+
+bool initLogging() {
+    return true;
+}
+
+bool shutdownLogging() {
+    return true;
+}
+
+namespace log {
 namespace {
     size_t logtime(char *buf,yamq::Timestamp now) {
         size_t len = 22;
@@ -47,15 +56,8 @@ LogCapture::~LogCapture() {
     LogStream::Buffer &buf = stream().buffer();
     buf.append("\n",2);
     // 析构函数中写入日志存储模块
-    yamq::log::g_outputFunc(buf.data(),buf.length());
+    g_loggingSaveFunc(buf.data(),buf.length());
 }
 
 }//yamq::log
-bool initLogging() {
-    return true;
-}
-
-bool shutdownLogging() {
-    return true;
-}
 } // yamq

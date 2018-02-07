@@ -18,15 +18,17 @@ const char*const LogLevelNames[NUM_LOG_LEVELS] = {
     "TRACE","INFO", "WARNING", "ERROR", "FATAL"
 };
 
-namespace log {
 /*
  * 日志解析模块，日志存储模块交互接口
  */
-typedef void (*MsgOutputFunc)(const char *msg,size_t msg_len);
-typedef void (*MsgFlushFunc)();
+typedef void (*LoggingSaveFunc)(const char *message,size_t len);
+typedef void (*LoggingFlushFunc)();
 
-extern MsgOutputFunc g_outputFunc;
-extern MsgFlushFunc g_flushFunc;
+extern LoggingSaveFunc g_loggingSaveFunc;
+extern LoggingFlushFunc g_loggingFlushFunc;
+
+namespace log {
+
 
 /*
 const int& logLevel() {
