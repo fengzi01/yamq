@@ -4,7 +4,7 @@
 #include "stdio.h"
 #include "stddef.h" // size_t
 
-#include "log/logcapture.h"
+#include "log/logstream.h"
 
 #define DPRINT(format,...) printf(format,##__VA_ARGS__)
 namespace yamq {
@@ -34,6 +34,31 @@ const int& logLevel() {
 }
 */
 
+/* 日志快照 */
+class LogCapture final {
+    public:
+        LogCapture(
+                const char *file, 
+                const int line, 
+                const char *function, 
+                int level
+                ):_file(file),_line(line),_function(function),_level(level) {
+            // 添加日志前缀
+            addprefix();
+        }
+        ~LogCapture();
+        LogStream &stream() {return _stream;}
+
+    private:
+        /* 添加日志前缀 */
+        void addprefix();
+        const char *_file;
+        const int _line;
+        const char *_function;
+        const int _level;
+        LogStream _stream;
+};
+
 } // yamq::log
 bool initLogging();
 bool shutdownLogging();
@@ -54,6 +79,13 @@ class NullStream {
 #define LOG(level) _COMPACT_LOG_ ## level.stream()
 
 #define YAMQ_STRIP_LOG 0
+#if YAMQ_STRIP_LOG <= 0
+#define _COMPACT_LOG_TRACE yamq::log::LogCapture( \
+    __FILE__, __LINE__,static_cast<const char*>(__PRETTY_FUNCTION__), yamq::LOG_TRACE)
+#else
+#define _COMPACT_LOG_INFO yamq::NullStream()
+#endif
+
 #if YAMQ_STRIP_LOG <= 1
 #define _COMPACT_LOG_INFO yamq::log::LogCapture( \
     __FILE__, __LINE__,static_cast<const char*>(__PRETTY_FUNCTION__), yamq::LOG_INFO)

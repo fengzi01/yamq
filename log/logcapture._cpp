@@ -14,7 +14,7 @@ LogCapture::LogCapture(
         const int line, 
         const char *function, 
         int level
-        ):_file(file),_line(line),_function(function),_level(level){
+        ):_file(file),_line(line),_function(function),_level(level) {
 }
 
 LogCapture::~LogCapture() {

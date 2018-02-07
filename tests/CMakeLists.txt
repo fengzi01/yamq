@@ -19,10 +19,11 @@ add_executable(just_for_test
 target_link_libraries(just_for_test
     gtest gtest_main
     )
+MESSAGE(STATUS "IN TEST!!!!")
 
 # unittest
 ## LOG
-file(GLOB LOG_UNITTESTS "log/*_unittest.cpp")
+file(GLOB LOG_UNITTESTS "log*_unittest.cpp")
 foreach(LOG_UT ${LOG_UNITTESTS})
     get_filename_component(LOG_UT_WE ${LOG_UT} NAME_WE)
     MESSAGE(STATUS "ADD_TEST:" ${LOG_UT_WE})

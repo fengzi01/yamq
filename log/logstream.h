@@ -101,6 +101,10 @@ class LogStream {
         }
         
         Buffer& buffer(){return _buf;}
+#ifdef TEST
+        std::string toString();
+        void reset();
+#endif
     private:
         /* 转换int并拷贝到buf中 */
         template<typename T> void copy2buf(T v);

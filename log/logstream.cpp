@@ -108,6 +108,16 @@ LogStream& LogStream::operator<<(double v)
   return *this;
 }
 
+#ifdef TEST
+std::string LogStream::toString() {
+    return std::string(buffer().data(),buffer().length());
+}
+
+void LogStream::reset() {
+    buffer().reset();
+}
+#endif
+
 
 } // yamq::log
 } // yamq

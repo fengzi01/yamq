@@ -7,11 +7,15 @@ option(test "Whether to build unit tests" OFF)
 set(PROJECT_NAME "yamq")
 project(${PROJECT_NAME})
 
+SET(CMAKE_C_COMPILER "/usr/local/gcc-4.8.2/bin/gcc")
+SET(CMAKE_CXX_COMPILER "/usr/local/gcc-4.8.2/bin/g++")
+
 set(CMAKE_C_FLAGS "-g -O2 -Wall -fPIC")
-set(CMAKE_CXX_FLAGS "-g -O2 -Wall -fPIC")
+set(CMAKE_CXX_FLAGS "-g -O2 -Wall -fPIC -std=c++11")
 
 if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
-    message( FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
+    #message( FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
+    message( WARNING "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
 endif()
 
 ################################
@@ -51,6 +55,7 @@ add_subdirectory(src)
 # TEST
 if(test)
     enable_testing()
+    MESSAGE(STATUS "Enable Test:" ${test})
     add_subdirectory(tests)
 endif()
 
