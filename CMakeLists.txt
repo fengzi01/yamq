@@ -51,7 +51,7 @@ add_subdirectory(src)
 # TEST
 if(test)
     enable_testing()
-    add_subdirectory(test)
+    add_subdirectory(tests)
 endif()
 
 ## INSTALL

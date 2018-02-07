@@ -1,6 +1,6 @@
 # Download and unpack googletest at configure time
-set(googletest-root-dir ${CMAKE_BINARY_DIR}/3rdparty/googletest)
-set(googletest-download-dir ${googletest-root-dir}/googletest-download)
+set(GOOGLETEST_ROOT_DIR ${CMAKE_BINARY_DIR}/3rdparty/googletest)
+set(googletest-download-dir ${GOOGLETEST_ROOT_DIR}/googletest-download)
 configure_file(${PROJECT_SOURCE_DIR}/cmake/DownloadGtest.CMakeLists.txt.in ${googletest-download-dir}/CMakeLists.txt)
 execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
 	WORKING_DIRECTORY ${googletest-download-dir} )
@@ -14,8 +14,8 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 # Add googletest directly to our build. This adds
 # the following targets: gtest, gtest_main, gmock
 # and gmock_main
-add_subdirectory("${googletest-root-dir}/googletest-src"
-	"${googletest-root-dir}/googletest-build")
+add_subdirectory("${GOOGLETEST_ROOT_DIR}/googletest-src"
+	"${GOOGLETEST_ROOT_DIR}/googletest-build")
 
 # The gtest/gmock targets carry header search path
 # dependencies automatically when using CMake 2.8.11 or
