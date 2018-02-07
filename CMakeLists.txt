@@ -7,9 +7,6 @@ option(test "Whether to build unit tests" OFF)
 set(PROJECT_NAME "yamq")
 project(${PROJECT_NAME})
 
-SET(CMAKE_C_COMPILER "/usr/local/gcc-4.8.2/bin/gcc")
-SET(CMAKE_CXX_COMPILER "/usr/local/gcc-4.8.2/bin/g++")
-
 set(CMAKE_C_FLAGS "-g -O2 -Wall -fPIC")
 set(CMAKE_CXX_FLAGS "-g -O2 -Wall -fPIC -std=c++11")
 
@@ -39,6 +36,11 @@ file(GLOB_RECURSE SRC_SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
 set(LOG_LIB_NAME "yamq_log")
 
+if(test) 
+    # add preprocessor macro
+    add_definitions(-DUNITTEST)
+endif()
+
 # submodule
 #add_executable(${PROJECT_NAME} ${SRC_SOURCES})
 add_subdirectory(log)
@@ -51,13 +53,13 @@ add_subdirectory(src)
 # static
 #ADD_EXECUTABLE(${PROJECT_NAME}-static ${SRC_SOURCES})
 #TARGET_LINK_LIBRARIES(${PROJECT_NAME}-static ${LOG_LIB}-static "-static")
-
 # TEST
 if(test)
     enable_testing()
     MESSAGE(STATUS "Enable Test:" ${test})
     add_subdirectory(tests)
 endif()
+
 
 ## INSTALL
 set(CMAKE_INSTALL_PREFIX /usr/local)

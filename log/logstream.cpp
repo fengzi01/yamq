@@ -108,7 +108,7 @@ LogStream& LogStream::operator<<(double v)
   return *this;
 }
 
-#ifdef TEST
+#ifdef UNITTEST
 std::string LogStream::toString() {
     return std::string(buffer().data(),buffer().length());
 }

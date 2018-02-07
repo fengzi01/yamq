@@ -28,6 +28,7 @@ class FixedBuffer final {
                 return false;
             }
             memcpy(_cur,buf,len);
+            offset(len);
             return true;
         }
     private:
@@ -101,7 +102,7 @@ class LogStream {
         }
         
         Buffer& buffer(){return _buf;}
-#ifdef TEST
+#ifdef UNITTEST
         std::string toString();
         void reset();
 #endif
