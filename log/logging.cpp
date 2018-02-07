@@ -45,7 +45,7 @@ void LogCapture::addprefix() {
     buf.append(LogLevelNames[_level],1); // FIXME _level
     
     if (buf.remain() >= 22) {
-        size_t len = logtime(buf.current(),yamq::now());
+        size_t len = logtime(buf.current(),yamq::nowTime());
         buf.offset(len);
     }
     _stream << " " << static_cast<int>(getTid()) << " ";

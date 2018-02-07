@@ -14,7 +14,7 @@ typedef struct tm ReadableTime;
 typedef pid_t Tid;
 
 /* 当前时间 */
-Timestamp now();
+Timestamp nowTime();
 
 /* 获取当前进程id */
 Tid getTid();

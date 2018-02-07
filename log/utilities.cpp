@@ -3,7 +3,7 @@
 #include "utilities.h"
 namespace yamq{ 
 /* 获取当前时间 */
-Timestamp now() {
+Timestamp nowTime() {
 	// TODO(hamaji): temporary impementation - it might be too slow.
 	struct timeval tv;
 	::gettimeofday(&tv, NULL);
