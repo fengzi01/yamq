@@ -38,7 +38,7 @@ class FileWrapper {
             size_t remain = len;
             size_t x = 0;
             do {
-                x = ::fwrite(buf,len,1,_raw);
+                x = ::fwrite(buf,sizeof(char),len,_raw);
                 if (0 == x) {
                     int err = ferror(_raw);
                     if (err) {

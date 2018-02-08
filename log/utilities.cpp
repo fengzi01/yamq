@@ -29,4 +29,22 @@ Timestamp nowTime(ReadableTime *tm) {
 Tid getTid() {
     return static_cast<Tid>(getpid());
 }
+char g_projectName[256];
+char g_projectDirname[1024];
+
+const char *getProjectName() {
+    return g_projectName;
+}
+const char *getProjectDirname() {
+    return g_projectDirname;
+}
+bool initUtilities(const char *argv0) {
+    assert(NULL!=argv0);
+    strncpy(g_projectDirname,argv0,sizeof(g_projectDirname));
+
+    char* slash = strrchr(g_projectDirname, '/');
+    strncpy(g_projectName,slash+1,sizeof(g_projectName));
+    *(++slash) = '\0';
+    return true;
+}
 }

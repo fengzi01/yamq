@@ -3,12 +3,16 @@
 #include <assert.h>
 
 namespace yamq {
+#ifdef SYNC_LOGGING
+std::unique_ptr<LogFile> g_logfileptr;
+#endif
 namespace log {
 
 LogFile::LogFile(const char *basename,const char *filename,uint32_t rollSize,const char *extension):
     _basename(basename),_filename(filename),_extension(extension),
     _lastTimestamp(0),_rollIndex(0),_writenChars(0),_kRollSize(rollSize) {
-    LOG(TRACE) << "KRollSize:" << _kRollSize << ",writenChars" << _writenChars;
+    LOG(TRACE) << "KRollSize:" << _kRollSize << ",writenChars:" << _writenChars;
+    LOG(TRACE) << "Basename:" << _basename << ",filename:" << _filename;
     roll(true);
 }
 

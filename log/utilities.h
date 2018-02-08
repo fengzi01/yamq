@@ -20,6 +20,11 @@ typedef pid_t Tid;
 Timestamp nowTime(ReadableTime *tm);
 ReadableTime localTime();
 
+const char *getProjectName();
+const char *getProjectDirname();
+
+bool initUtilities(const char *argv0);
+
 /* 获取当前进程id */
 Tid getTid();
 

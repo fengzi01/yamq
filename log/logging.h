@@ -5,6 +5,7 @@
 #include "stddef.h" // size_t
 
 #include "log/logstream.h"
+#include "memory"
 
 #define DPRINT(format,...) printf(format,##__VA_ARGS__)
 namespace yamq {
@@ -26,6 +27,20 @@ typedef void (*LoggingFlushFunc)();
 
 extern LoggingSaveFunc g_loggingSaveFunc;
 extern LoggingFlushFunc g_loggingFlushFunc;
+
+//#ifdef SYNC_LOGGING
+namespace log {
+class LogFile;
+}
+extern std::unique_ptr<log::LogFile> g_logfileptr;
+extern bool g_syncLoggingStarted;
+
+void syncLoggingSave(const char *,size_t); 
+void syncLoggingFlush(); 
+//#endif 
+bool initLogging(const char *);
+bool shutdownLogging();
+
 
 namespace log {
 
@@ -62,8 +77,6 @@ class LogCapture final {
 };
 
 } // yamq::log
-bool initLogging();
-bool shutdownLogging();
 
 /**
  * 占位符
