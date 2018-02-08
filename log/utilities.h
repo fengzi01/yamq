@@ -5,6 +5,7 @@
 #include <stdint.h>
 //#include <sys/types.h> // pid_t
 #include <unistd.h> // getpid
+#include <string.h>
 
 namespace yamq {
 typedef uint64_t Timestamp; // seconds * 1000000 + microseconds
@@ -14,7 +15,8 @@ typedef struct tm ReadableTime;
 typedef pid_t Tid;
 
 /* 当前时间 */
-Timestamp nowTime();
+Timestamp nowTime(ReadableTime *tm);
+ReadableTime localTime();
 
 /* 获取当前进程id */
 Tid getTid();

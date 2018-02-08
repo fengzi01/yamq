@@ -5,8 +5,12 @@
 #include <string>
 #include <memory> // unique_ptr
 #include <algorithm> // std::move
-#include "unistd.h"
+#include <unistd.h>
 #include <string.h>
+#include "log/utilities.h"
+#include "log/logging.h"
+
+#include <mutex>
 
 namespace yamq {
 namespace internal {
@@ -19,6 +23,7 @@ class FileWrapper {
                 _valid = false;
             } else {
                 _valid = true;
+                setbuffer(_raw,_buf,bufSize);
             }
         }
 
@@ -31,8 +36,9 @@ class FileWrapper {
         size_t write(const void *buf,size_t len) {
             if (!valid() || len <= 0) {return 0;}
             size_t remain = len;
+            size_t x = 0;
             do {
-                size_t x = ::fwrite(buf,len,1,_raw);
+                x = ::fwrite(buf,len,1,_raw);
                 if (0 == x) {
                     int err = ferror(_raw);
                     if (err) {
@@ -41,7 +47,8 @@ class FileWrapper {
                     break;
                 }
                 remain -= x;
-            }while(0 == remain);
+            } while(0 != remain);
+//            LOG(TRACE) << "remain:" << remain;
             return len - remain;
         }
 
@@ -65,13 +72,18 @@ class FileWrapper {
         std::string _filemode;
         bool _valid;
         FILE *_raw;
+
+        static const size_t bufSize = 1000;
+        char _buf[bufSize];
 };
 }// internal
 
 namespace log {
+void rollLog();
+
 class LogFile {
     public:
-        LogFile(const char *basename,const char *filename,uint32_t rollsize);
+        LogFile(const char *basename,const char *filename,uint32_t rollSize = kMaxRollSize,const char *extension = "log");
         LogFile(const LogFile &) = delete;
         LogFile &operator=(LogFile &) = delete;
 
@@ -79,21 +91,36 @@ class LogFile {
         size_t append(const char *data,size_t len);
         void flush() {_file->flush();}
 
-        /* 整点滚动日志文件 */
-        /* 日志滚动 */
-        bool roll();
+        /**
+         * 日志滚动函数
+         * @param next 是否创建新filepath
+         */
+        bool roll(bool next);
     private:
+        /* 日志滚动 */
+        bool roll(const std::string &filepath);
+        std::string getLogfile();
+
         std::unique_ptr<internal::FileWrapper> _file;
         std::string _basename;
         std::string _filename;
-        uint32_t _rollsize;
         std::string _extension; // 扩展名
-        /* 写入字符数 */
+
+        /* 上一次roll的时间点 */
+        Timestamp _lastTimestamp;
+        /* 上一次roll的文件路径 */
+        std::string _lastFilepath;
+        uint32_t _rollIndex;
+
+        /* 自上一次roll写入字符数 */
         uint64_t _writenChars;
-        int _lastHour;
+        /*最大日志大小*/
+        uint64_t _kRollSize;
+
+        std::mutex _mutex;
 
         constexpr static const char *FILE_MODE = "ae";
-        static const size_t kMaxRollSize = 2*1000*1000*1000;
+        static const uint64_t kMaxRollSize = 2*1000*1000*1000;
 };
 } // log
 namespace detail {

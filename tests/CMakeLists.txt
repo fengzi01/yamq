@@ -38,3 +38,9 @@ foreach(LOG_UT ${LOG_UNITTESTS})
     add_test(NAME ${LOG_UT_WE} COMMAND ${LOG_UT_WE})
 endforeach()
 
+file(GLOB LOG_TESTS "log*_test.cpp")
+foreach(LOG_TEST ${LOG_TESTS}) 
+    get_filename_component(LOG_TEST_WE ${LOG_TEST} NAME_WE)
+    add_executable(${LOG_TEST_WE} ${LOG_TEST} $<TARGET_OBJECTS:LOG_LIB>)
+endforeach()
+
