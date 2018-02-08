@@ -12,11 +12,14 @@ Timestamp nowTime(ReadableTime *tm) {
         // 转换为本地可读时间
         memset(tm,0, sizeof(ReadableTime));
         time_t t = 0;
+        // FIXME
+        assert(tz.tz_minuteswest == -480);
         // +偏移分钟数
-        t = tv.tv_sec + tz.tz_minuteswest*60;
+        t = tv.tv_sec - tz.tz_minuteswest*60;
         ::gmtime_r(&t,tm);
         tm->tm_gmtoff = tz.tz_minuteswest * 60;
         tm->tm_zone = NULL;
+//        fprintf(stderr,"off:%d\n",tz.tz_minuteswest);
     } else {
         ::gettimeofday(&tv,NULL);
     }

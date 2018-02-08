@@ -24,12 +24,11 @@ bool shutdownLogging() {
 
 namespace log {
 namespace {
-    size_t logtime(char *buf,yamq::Timestamp now) {
+    size_t logtime(char *buf) {
         size_t len = 22;
         ReadableTime tm;
-        time_t time = static_cast<time_t>(now / 1000000);
+        Timestamp now = nowTime(&tm);
         uint32_t microSeconds = now % 1000000;
-        ::gmtime_r(&time,&tm);
         // 170703 22:04:05.242153
         snprintf(buf,22,"%02d%02d%02d %02d:%02d:%02d.%06d",tm.tm_year,tm.tm_mon,tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec,microSeconds);
         return len;
@@ -45,7 +44,7 @@ void LogCapture::addprefix() {
     buf.append(LogLevelNames[_level],1); // FIXME _level
     
     if (buf.remain() >= 22) {
-        size_t len = logtime(buf.current(),yamq::nowTime());
+        size_t len = logtime(buf.current());
         buf.offset(len);
     }
     _stream << " " << static_cast<int>(getTid()) << " ";

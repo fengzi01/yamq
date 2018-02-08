@@ -27,35 +27,36 @@ size_t LogFile::append(const char *data,size_t len) {
 }
 
 bool LogFile::roll(bool next) {
+    ReadableTime now_tm;
+    Timestamp now = nowTime(&now_tm);
+    std::string filepath;
 
     if (!next) {
         // 超限roll
         LOG(TRACE) << "Start roll(false)";
         ++_rollIndex;
-        return roll(_lastFilepath);    
+        filepath = _lastFilepath;
+    } else {
+        LOG(TRACE) << "Start roll(true)";
+        // 构建logfile名称
+        filepath += _basename;
+        filepath += "/";
+        filepath += _filename;
+        filepath += ".";
+        filepath += _extension;
+
+        std::string linkpath(filepath);
+
+        char timebuf[32];
+        strftime(timebuf, sizeof timebuf, "%Y%m%d%H", &now_tm);
+        filepath += ".";
+        filepath += timebuf;
     }
-    LOG(TRACE) << "Start roll(true)";
-    ReadableTime now_reabable;
-    Timestamp now = nowTime(&now_reabable);
-    time_t now_unix = static_cast<time_t>(now/1000000); // FIXME too slow?
-    struct tm now_tm;
-    gmtime_r(&now_unix, &now_tm);
-
-    // 构建logfile名称
-    std::string filepath(_basename);
-    filepath += "/";
-    filepath += _filename;
-    filepath += ".";
-    filepath += _extension;
-
-    std::string linkpath(filepath);
-
-    char timebuf[32];
-    strftime(timebuf, sizeof timebuf, "%Y%m%d%H", &now_tm);
-    filepath += ".";
-    filepath += timebuf;
-
-    return roll(filepath);
+    if (roll(filepath)) {
+        _lastTimestamp = now;
+        return true;
+    }
+    return false;
 }
 
 bool LogFile::roll(const std::string &path) {

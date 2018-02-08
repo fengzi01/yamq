@@ -6,6 +6,8 @@
 //#include <sys/types.h> // pid_t
 #include <unistd.h> // getpid
 #include <string.h>
+#include "logging.h"
+#include "assert.h"
 
 namespace yamq {
 typedef uint64_t Timestamp; // seconds * 1000000 + microseconds

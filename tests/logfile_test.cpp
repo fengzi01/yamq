@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
         snprintf(data,256,"%d:%s",i,line);
         file.append(data,strlen(data));
         if (i == 10) {
-            LOG(INFO) << "I:" << i;
+            LOG(INFO) << "i:" << i;
             file.roll(false);
         }
         file.flush();
