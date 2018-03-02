@@ -2,6 +2,11 @@
 #define YAMQ_ASYNC_LOGGING 
 #include <stddef.h>
 #include "log/logstream.h"
+#include "log/Thread.h"
+#include <vector>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
 
 namespace yamq {
 
@@ -26,8 +31,30 @@ class LogWorker {
     public:
         static const size_t kMaxLogBufferLen= 3000000; 
         /* 消息存储缓存 */
-        typedef internal::FixedBuffer<kMaxLogBufferLen> BigBuffer;
+        typedef internal::FixedBuffer<kMaxLogBufferLen> Buffer;
+        typedef std::unique_ptr<Buffer> BufferPtr;
+        void append_async(const char *data,size_t len); 
+        void flush();
     private:
+        void threadFunc();
+        std::unique_ptr<std1::Thread> _backend;        
+
+        /* 填满的buffer数组 */
+        std::vector<BufferPtr> _buffersFilled;
+        /* 可用的buffer数组 */
+        std::vector<BufferPtr> _buffersAvailiable;
+        BufferPtr _currentBuffer;
+        /* buffer限制 */
+        size_t _kMaxBuffers; 
+
+        std::mutex _mutex;
+        std::condition_variable _condition;
+
+        bool _stop;
+        const size_t _flushInterval; // milliseconds 毫秒
+
+        std::string _dirname;
+        std::string _filename;
 };
 } // log
 } // yamq
