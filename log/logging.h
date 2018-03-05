@@ -7,6 +7,8 @@
 #include "log/logstream.h"
 #include "memory"
 
+#define ASYNC_LOGGING 1
+
 #define DPRINT(format,...) printf(format,##__VA_ARGS__)
 namespace yamq {
 

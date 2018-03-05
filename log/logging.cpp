@@ -1,6 +1,7 @@
 #include "log/logging.h"
 #include "utilities.h"
 #include "log/logfile.h"
+#include "log/asynclogging.h"
 
 namespace yamq {
 
@@ -15,8 +16,8 @@ void defaultLoggingFlush() {
 LoggingSaveFunc g_loggingSaveFunc = defaultLoggingSave;
 LoggingFlushFunc g_loggingFlushFunc = defaultLoggingFlush;
 
-//#ifdef SYNC_LOGGING
-bool g_syncLoggingStarted = true;
+#ifdef SYNC_LOGGING
+bool g_syncLoggingStarted = false;
 std::unique_ptr<log::LogFile> g_logfileptr;
 void syncLoggingSave(const char *msg,size_t len) {
     if (g_syncLoggingStarted) {
@@ -28,19 +29,26 @@ void syncLoggingFlush() {
         g_logfileptr->flush();
     }
 }
-//#endif
+#endif
 
 bool initLogging(const char *argv0) {
     initUtilities(argv0);
-//#ifdef SYNC_LOGGING
-using yamq::log::LogFile;
-// 初始化
-g_logfileptr.reset(new LogFile(getProjectDirname(),getProjectName()));
-g_syncLoggingStarted = true;
+#ifdef SYNC_LOGGING
+    using yamq::log::LogFile;
+    // 初始化
+    g_logfileptr.reset(new LogFile(getProjectDirname(),getProjectName()));
+    g_syncLoggingStarted = true;
 
-g_loggingSaveFunc = syncLoggingSave;
-g_loggingFlushFunc = syncLoggingFlush;
-//#endif
+    g_loggingSaveFunc = syncLoggingSave;
+    g_loggingFlushFunc = syncLoggingFlush;
+
+    LOG(WARNING) << "init log with sync mode";
+#endif
+#ifdef ASYNC_LOGGING
+    LOG(WARNING) << "start init async logging";
+    initAsyncLogging();
+    LOG(WARNING) << "init log with async mode";
+#endif
     return true;
 }
 

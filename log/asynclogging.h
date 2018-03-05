@@ -6,7 +6,7 @@
 #include <vector>
 #include <mutex>
 #include <condition_variable>
-#include <queue>
+#include "log/shared_queue.h"
 
 namespace yamq {
 
@@ -33,19 +33,36 @@ class LogWorker {
         /* 消息存储缓存 */
         typedef internal::FixedBuffer<kMaxLogBufferLen> Buffer;
         typedef std::unique_ptr<Buffer> BufferPtr;
+
+        LogWorker(size_t bufSize,size_t intval,std::string dirname,std::string filename):_stop(false),_flushInterval(intval),_dirname(dirname),_filename(filename),_backend(new std1::Thread(std::bind(&LogWorker::threadFunc,this))) {
+            _buffersAvailiable.reserve(bufSize);
+            for ( size_t i = 0; i < bufSize; ++i )  {
+                _buffersAvailiable.push_back(BufferPtr(new Buffer()));
+            }
+
+            fprintf(stderr,"construct logworker end %s %s\n",dirname.c_str(),filename.c_str());
+        }
+
+        ~LogWorker() {
+            {
+            std::lock_guard<std::mutex> guard(_mutex);
+            _stop = true;
+            _condition.notify_one();
+            }
+            _backend->join();
+        }
+        
         void append_async(const char *data,size_t len); 
         void flush();
     private:
         void threadFunc();
-        std::unique_ptr<std1::Thread> _backend;        
 
         /* 填满的buffer数组 */
-        std::vector<BufferPtr> _buffersFilled;
+        std::queue<BufferPtr> _buffersFilled;
         /* 可用的buffer数组 */
         std::vector<BufferPtr> _buffersAvailiable;
-        BufferPtr _currentBuffer;
-        /* buffer限制 */
-        size_t _kMaxBuffers; 
+        BufferPtr _buffer;
+        BufferPtr _bufferAvailiable;
 
         std::mutex _mutex;
         std::condition_variable _condition;
@@ -55,6 +72,8 @@ class LogWorker {
 
         std::string _dirname;
         std::string _filename;
+
+        std::unique_ptr<std1::Thread> _backend;        
 };
 } // log
 } // yamq

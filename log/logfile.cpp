@@ -3,9 +3,6 @@
 #include <assert.h>
 
 namespace yamq {
-#ifdef SYNC_LOGGING
-std::unique_ptr<LogFile> g_logfileptr;
-#endif
 namespace log {
 
 LogFile::LogFile(const char *basename,const char *filename,uint32_t rollSize,const char *extension):
