@@ -34,23 +34,9 @@ class LogWorker {
         typedef internal::FixedBuffer<kMaxLogBufferLen> Buffer;
         typedef std::unique_ptr<Buffer> BufferPtr;
 
-        LogWorker(size_t bufSize,size_t intval,std::string dirname,std::string filename):_stop(false),_flushInterval(intval),_dirname(dirname),_filename(filename),_backend(new std1::Thread(std::bind(&LogWorker::threadFunc,this))) {
-            _buffersAvailiable.reserve(bufSize);
-            for ( size_t i = 0; i < bufSize; ++i )  {
-                _buffersAvailiable.push_back(BufferPtr(new Buffer()));
-            }
+        LogWorker(size_t bufSize,size_t intval,std::string dirname,std::string filename);
 
-            fprintf(stderr,"construct logworker end %s %s\n",dirname.c_str(),filename.c_str());
-        }
-
-        ~LogWorker() {
-            {
-            std::lock_guard<std::mutex> guard(_mutex);
-            _stop = true;
-            _condition.notify_one();
-            }
-            _backend->join();
-        }
+        ~LogWorker();
         
         void append_async(const char *data,size_t len); 
         void flush();
@@ -62,7 +48,6 @@ class LogWorker {
         /* 可用的buffer数组 */
         std::vector<BufferPtr> _buffersAvailiable;
         BufferPtr _buffer;
-        BufferPtr _bufferAvailiable;
 
         std::mutex _mutex;
         std::condition_variable _condition;
