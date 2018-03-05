@@ -1,14 +1,10 @@
 #include "log/asynclogging.h"
-#include "log/logfile.h"
-
 namespace yamq {
 
 std::unique_ptr<log::LogWorker> g_logworkerptr;
 bool g_asyncLoggingStarted = false;
 bool initAsyncLogging() {
-   LOG(WARNING) << "init async logging";
-   g_logworkerptr.reset(new log::LogWorker(2,300,getProjectDirname(),getProjectName())); 
-   LOG(WARNING) << "init async logging1";
+   g_logworkerptr.reset(new log::LogWorker(3,300,getProjectDirname(),getProjectName())); 
    g_asyncLoggingStarted = true;
 
    g_loggingSaveFunc = asyncLoggingSave;
@@ -33,17 +29,13 @@ LogWorker::LogWorker(size_t bufSize,size_t intval,std::string dirname,std::strin
     _buffer(new Buffer()),
     _stop(false),
     _flushInterval(intval),
-    _dirname(dirname),
-    _filename(filename),
+    _output(new LogFile(dirname.c_str(),filename.c_str())), 
     _backend(new std1::Thread(std::bind(&LogWorker::threadFunc,this))) {
         _buffersAvailiable.reserve(bufSize);
         for ( size_t i = 0; i < bufSize; ++i )  {
             _buffersAvailiable.push_back(BufferPtr(new Buffer()));
         }
-
-        fprintf(stderr,"construct logworker end %s %s\n",dirname.c_str(),filename.c_str());
 }
-
 LogWorker::~LogWorker() {
     {
         fprintf(stderr,"~logworker\n");
@@ -54,27 +46,23 @@ LogWorker::~LogWorker() {
     _backend->join();
 }
 void LogWorker::threadFunc() {
-    fprintf(stderr,"hello world\n");
     std::vector<BufferPtr> buffersWriteable;
     std::vector<BufferPtr> buffersWriten;
     BufferPtr buffer(new Buffer());
-    LogFile output(_dirname.c_str(),_filename.c_str());
+    //LogFile output(_dirname.c_str(),_filename.c_str());
     
     for(;;) {
-        fprintf(stderr,"hello world0\n");
         {
         std::unique_lock<std::mutex> lock(_mutex);
         // 消费者等待
-        fprintf(stderr,"hello world1\n");
         _condition.wait_for(lock,std::chrono::milliseconds(_flushInterval),[this](){return _stop || !_buffersFilled.empty(); });
-        fprintf(stderr,"hello world2\n");
         // 0&1库
         if (_buffersFilled.empty()) {
             std::swap(_buffer,buffer);
         }
         }
         if (_buffersFilled.empty()) {
-            output.append(buffer->data(),buffer->length()); 
+            _output->append(buffer->data(),buffer->length()); 
         } else {
             std::unique_lock<std::mutex> lock(_mutex);
             BufferPtr buf;
@@ -84,17 +72,19 @@ void LogWorker::threadFunc() {
 
                 // 消费
                 lock.unlock();
-                output.append(buf->data(),buf->length());
+                _output->append(buf->data(),buf->length());
                 lock.lock();
 
-                if (_buffersAvailiable.empty()) {
-                    LOG(WARNING) << "Put availiable buffer in backend!!";
-                }
-                _buffersAvailiable.push_back(std::move(buffer));
+//                if (_buffersAvailiable.empty()) {
+                    fprintf(stderr,"Put availiable buffer in backend!!\n");
+//                }
+                _buffersAvailiable.push_back(std::move(buf));
             }
         }
-        output.flush();
-        if (_stop) break;
+        _output->flush();
+        if (_stop) {
+            break;
+        }
     }
 }
 
@@ -104,25 +94,26 @@ void LogWorker::flush() {
 }
 
 void LogWorker::append_async(const char *data,size_t len) {
-    fprintf(stderr,"hello world3\n");
     std::lock_guard<std::mutex> guard(_mutex);
 
     if (_stop) return;
-    fprintf(stderr,"hello world4\n");
 
-    if (_buffer.get() && _buffer->remain() < len) {
+    if (_buffer.get() && _buffer->remain() > len) {
         _buffer->append(data,len);
     } else {
         // _buffer 
-        _buffersFilled.push(std::move(_buffer));
-        _condition.notify_one();
+        if (_buffer.get()) {
+            _buffersFilled.push(std::move(_buffer));
+            _buffer.reset(nullptr);
+            _condition.notify_one();
+        }
 
         if (!_buffersAvailiable.empty()) {
             _buffer.reset(_buffersAvailiable.back().release());
             _buffersAvailiable.pop_back();
             _buffer->append(data,len);
         } else {
-            LOG(WARNING) << "No availiable buffer in frontend!!";
+            fprintf(stderr,"No availiable buffer in frontend!!\n");
         }
     }
 }

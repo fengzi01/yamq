@@ -1,16 +1,22 @@
 #include <iostream>
 #include "log/logging.h"
 
-using std::cout;
-using std::endl;
+static void mysleep(int ms)
+{
+    timespec t = { 0, 1000*1000*ms };
+    nanosleep(&t, NULL);
+}
 
 int main(int argc, char *argv[])
 {
     yamq::initLogging(argv[0]);
-    LOG(TRACE) << "hello world";
-    LOG(INFO) << "hello world";
-    LOG(WARNING) << "hello world";
-    LOG(ERROR) << "hello world";
+    while (true) {
+        LOG(TRACE) << "hello world";
+        LOG(INFO) << "hello world";
+        LOG(WARNING) << "hello world";
+        LOG(ERROR) << "hello world";
+        mysleep(10);
+    }
     yamq::shutdownLogging();
     return 0;
 }

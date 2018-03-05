@@ -45,7 +45,6 @@ bool initLogging(const char *argv0) {
     LOG(WARNING) << "init log with sync mode";
 #endif
 #ifdef ASYNC_LOGGING
-    LOG(WARNING) << "start init async logging";
     initAsyncLogging();
     LOG(WARNING) << "init log with async mode";
 #endif
