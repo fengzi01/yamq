@@ -28,7 +28,7 @@ foreach(LOG_UT ${LOG_UNITTESTS})
     get_filename_component(LOG_UT_WE ${LOG_UT} NAME_WE)
     MESSAGE(STATUS "ADD_TEST:" ${LOG_UT_WE})
     add_executable(${LOG_UT_WE} ${LOG_UT}
-        $<TARGET_OBJECTS:LOG_LIB>
+        $<TARGET_OBJECTS:log_objects>
         )
 
     ## gtest
@@ -41,6 +41,6 @@ endforeach()
 file(GLOB LOG_TESTS "log*_test.cpp")
 foreach(LOG_TEST ${LOG_TESTS}) 
     get_filename_component(LOG_TEST_WE ${LOG_TEST} NAME_WE)
-    add_executable(${LOG_TEST_WE} ${LOG_TEST} $<TARGET_OBJECTS:LOG_LIB>)
+    add_executable(${LOG_TEST_WE} ${LOG_TEST} $<TARGET_OBJECTS:log_objects>)
 endforeach()
 
