@@ -69,7 +69,7 @@ namespace {
     }
 }
 
-void LogCapture::addprefix() {
+void LogCapture::addPrefix() {
     /*
      * Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
      * I170703 22:04:05.242153  6569 glog_test2.cpp:7] Hello,GLOG!
@@ -84,6 +84,16 @@ void LogCapture::addprefix() {
     }
     _stream << " " << static_cast<int>(getTid()) << " ";
     _stream << _file << ":" << _line << "] "; 
+}
+
+LogCapture::LogCapture(
+        const char *file, 
+        const int line, 
+        const char *function, 
+        int level
+        ):_file(file),_line(line),_function(function),_level(level) {
+    // 添加日志前缀
+    addPrefix();
 }
 
 LogCapture::~LogCapture() {

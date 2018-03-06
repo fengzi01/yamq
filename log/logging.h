@@ -30,7 +30,7 @@ typedef void (*LoggingFlushFunc)();
 extern LoggingSaveFunc g_loggingSaveFunc;
 extern LoggingFlushFunc g_loggingFlushFunc;
 
-//#ifdef SYNC_LOGGING
+#ifdef SYNC_LOGGING
 namespace log {
 class LogFile;
 }
@@ -39,10 +39,10 @@ extern bool g_syncLoggingStarted;
 
 void syncLoggingSave(const char *,size_t); 
 void syncLoggingFlush(); 
-//#endif 
+#endif 
+
 bool initLogging(const char *);
 bool shutdownLogging();
-
 
 namespace log {
 
@@ -56,21 +56,14 @@ const int& logLevel() {
 /* 日志快照 */
 class LogCapture final {
     public:
-        LogCapture(
-                const char *file, 
-                const int line, 
-                const char *function, 
-                int level
-                ):_file(file),_line(line),_function(function),_level(level) {
-            // 添加日志前缀
-            addprefix();
-        }
         ~LogCapture();
         LogStream &stream() {return _stream;}
+        LogCapture(const char *file, const int line, 
+                const char *function, int level);
 
     private:
         /* 添加日志前缀 */
-        void addprefix();
+        void addPrefix();
         const char *_file;
         const int _line;
         const char *_function;

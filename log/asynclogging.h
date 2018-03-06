@@ -6,8 +6,8 @@
 #include <vector>
 #include <mutex>
 #include <condition_variable>
-#include "log/shared_queue.h"
 #include "log/logfile.h"
+#include <queue>
 
 namespace yamq {
 
@@ -57,7 +57,6 @@ class LogWorker {
         const size_t _flushInterval; // milliseconds 毫秒
 
         std::unique_ptr<LogFile> _output;
-
         std::unique_ptr<std1::Thread> _backend;        
 };
 } // log

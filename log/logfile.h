@@ -18,27 +18,35 @@
 namespace yamq {
 namespace internal {
 /* 封装文件指针 */
-class FileWrapper {
+class AppendFileWrapper final {
     public:
-        FileWrapper(const char* filepath,const char *mode):_filepath(filepath),_filemode(mode) {
+        AppendFileWrapper(const char* filepath,const char *mode):
+            _filepath(filepath),
+            _filemode(mode),_writenChars(0) {
             open();
         }
 
-        FileWrapper(const FileWrapper&) = delete;
-        FileWrapper &operator=(FileWrapper&) = delete;
-        ~FileWrapper() {
+        AppendFileWrapper(const AppendFileWrapper&) = delete;
+        AppendFileWrapper &operator=(AppendFileWrapper&) = delete;
+        ~AppendFileWrapper() {
             ::fclose(_raw);
         }
 
-        size_t write(const void *buf,size_t len) {
+        size_t append(const void *buf,size_t len) {
             if (!valid() || len <= 0) {return 0;}
             if (checkIfOpen() != 0) {
                 return 0;
             }
             size_t remain = len;
             size_t x = 0;
+            size_t writen = 0;
+            
             do {
+#ifdef fwrite_unlocked
+                x = ::fwrite_unlocked(buf,sizeof(char),len,_raw);
+#else
                 x = ::fwrite(buf,sizeof(char),len,_raw);
+#endif
                 if (0 == x) {
                     int err = ferror(_raw);
                     if (err) {
@@ -48,19 +56,12 @@ class FileWrapper {
                 }
                 remain -= x;
             } while(0 != remain);
-//            LOG(TRACE) << "remain:" << remain;
-            return len - remain;
+            writen = len - remain;
+            _writenChars += writen;
+            return writen;
         }
 
-        // FIXME
-        size_t read(const void *buf) {(void)buf; return 0;}
-
-        // FIXME
-        int seek(long offset,int base) {
-            if (!valid()) {return -1;}
-            (void)offset,(void)base;
-            return 0;
-        }
+        uint64_t writenChars() {return _writenChars;}
 
         void flush() {
             fflush(_raw);
@@ -74,6 +75,7 @@ class FileWrapper {
                 _valid = false;
             } else {
                 _valid = true;
+                _writenChars = 0;
                 setbuffer(_raw,_buf,bufSize);
 
                 // 存储文件属性
@@ -100,7 +102,6 @@ class FileWrapper {
                    return 0;
                }
            }
-
            return -1;
         }
 
@@ -109,6 +110,7 @@ class FileWrapper {
         bool _valid;
         FILE *_raw;
         struct stat _st;
+        uint64_t _writenChars;
 
         static const size_t bufSize = 1000;
         char _buf[bufSize];
@@ -116,11 +118,11 @@ class FileWrapper {
 }// internal
 
 namespace log {
-void rollLog();
 
+using internal::AppendFileWrapper;
 class LogFile {
     public:
-        LogFile(const char *basename,const char *filename,uint32_t rollSize = kMaxRollSize,const char *extension = "log");
+        LogFile(const char *basename,const char *filename,uint64_t rollSize = kMaxRollSize,const char *extension = "log");
         LogFile(const LogFile &) = delete;
         LogFile &operator=(LogFile &) = delete;
 
@@ -132,7 +134,7 @@ class LogFile {
         /* 日志滚动 */
         bool roll();
 
-        std::unique_ptr<internal::FileWrapper> _file;
+        std::unique_ptr<AppendFileWrapper> _file;
         std::string _basename;
         std::string _filename;
         std::string _extension; // 扩展名
@@ -143,15 +145,13 @@ class LogFile {
         std::string _lastFilepath;
         uint32_t _rollIndex;
 
-        /* 自上一次roll写入字符数 */
-        uint64_t _writenChars;
         /*最大日志大小*/
         uint64_t _kRollSize;
 
         std::mutex _mutex;
 
-        constexpr static const char *FILE_MODE = "ae";
-        static const uint64_t kMaxRollSize = 2*1000*1000*1000;
+        static constexpr const char *FILE_MODE = "ae";
+        static const uint64_t kMaxRollSize = 2LLU*1024*1024*1024; // 2G字节
 };
 } // log
 namespace detail {
