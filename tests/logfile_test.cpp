@@ -19,7 +19,6 @@ int main(int argc, char *argv[])
         file.append(data,strlen(data));
         if (i == 10) {
             LOG(INFO) << "i:" << i;
-            file.roll(false);
         }
         file.flush();
         usleep(2*100*1000);

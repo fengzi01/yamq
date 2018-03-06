@@ -3,7 +3,7 @@
 
 static void mysleep(int ms)
 {
-    timespec t = { 0, 10*ms };
+    timespec t = { 0, 1000*100*ms };
     nanosleep(&t, NULL);
 }
 

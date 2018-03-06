@@ -10,6 +10,9 @@
 #include "log/utilities.h"
 #include "log/logging.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <mutex>
 
 namespace yamq {
@@ -18,13 +21,7 @@ namespace internal {
 class FileWrapper {
     public:
         FileWrapper(const char* filepath,const char *mode):_filepath(filepath),_filemode(mode) {
-            if ( NULL == (_raw = ::fopen(filepath,mode))) {
-                perror("Could't create file");
-                _valid = false;
-            } else {
-                _valid = true;
-                setbuffer(_raw,_buf,bufSize);
-            }
+            open();
         }
 
         FileWrapper(const FileWrapper&) = delete;
@@ -35,6 +32,9 @@ class FileWrapper {
 
         size_t write(const void *buf,size_t len) {
             if (!valid() || len <= 0) {return 0;}
+            if (checkIfOpen() != 0) {
+                return 0;
+            }
             size_t remain = len;
             size_t x = 0;
             do {
@@ -68,10 +68,47 @@ class FileWrapper {
 
         bool valid() {return _valid;}
     private:
+        int open() {
+            if ( NULL == (_raw = ::fopen(_filepath.c_str(),_filemode.c_str()))) {
+                perror("Could't create file");
+                _valid = false;
+            } else {
+                _valid = true;
+                setbuffer(_raw,_buf,bufSize);
+
+                // 存储文件属性
+                int fd = fileno(_raw); 
+                return fstat(fd,&_st);
+            }
+            return -1;
+        }
+        /* 检测文件描述符并重新打开文件 */
+        int checkIfOpen() {
+           struct stat st;
+           int err = 0;
+           if ( (err=::stat(_filepath.c_str(),&st)) != 0) {
+               fprintf(stderr,"file is not exist!\n");
+               return open();
+           } else {
+               if (_st.st_ino != st.st_ino) {
+                   // 文件不一致
+                   fprintf(stderr,"file st_ino don't equal!\n");
+                   ::fclose(_raw);
+                   return open();
+               } else {
+                   // dummy
+                   return 0;
+               }
+           }
+
+           return -1;
+        }
+
         std::string _filepath;
         std::string _filemode;
         bool _valid;
         FILE *_raw;
+        struct stat _st;
 
         static const size_t bufSize = 1000;
         char _buf[bufSize];
@@ -91,15 +128,9 @@ class LogFile {
         size_t append(const char *data,size_t len);
         void flush() {_file->flush();}
 
-        /**
-         * 日志滚动函数
-         * @param next 是否创建新filepath
-         */
-        bool roll(bool next);
     private:
         /* 日志滚动 */
-        bool roll(const std::string &filepath);
-        std::string getLogfile();
+        bool roll();
 
         std::unique_ptr<internal::FileWrapper> _file;
         std::string _basename;

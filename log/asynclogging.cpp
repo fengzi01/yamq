@@ -29,7 +29,7 @@ LogWorker::LogWorker(size_t bufSize,size_t intval,std::string dirname,std::strin
     _buffer(new Buffer()),
     _stop(false),
     _flushInterval(intval),
-    _output(new LogFile(dirname.c_str(),filename.c_str())), 
+    _output(new LogFile(dirname.c_str(),filename.c_str(),1000*1000*2)), 
     _backend(new std1::Thread(std::bind(&LogWorker::threadFunc,this))) {
         _buffersAvailiable.reserve(bufSize);
         for ( size_t i = 0; i < bufSize; ++i )  {
