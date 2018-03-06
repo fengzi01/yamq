@@ -46,9 +46,7 @@ LogWorker::~LogWorker() {
     _backend->join();
 }
 void LogWorker::threadFunc() {
-    std::vector<BufferPtr> buffersWriteable;
-    std::vector<BufferPtr> buffersWriten;
-    BufferPtr buffer(new Buffer());
+    BufferPtr buffer;
     //LogFile output(_dirname.c_str(),_filename.c_str());
     
     for(;;) {
@@ -58,27 +56,34 @@ void LogWorker::threadFunc() {
         _condition.wait_for(lock,std::chrono::milliseconds(_flushInterval),[this](){return _stop || !_buffersFilled.empty(); });
         // 0&1库
         if (_buffersFilled.empty()) {
-            std::swap(_buffer,buffer);
+            buffer.reset(_buffer.release());
         }
         }
         if (_buffersFilled.empty()) {
             _output->append(buffer->data(),buffer->length()); 
+            buffer->reset();
+            {
+                // 归还buffer
+                std::lock_guard<std::mutex> lock(_mutex);
+                _buffersAvailiable.push_back(std::move(buffer));
+            }
         } else {
             std::unique_lock<std::mutex> lock(_mutex);
-            BufferPtr buf;
             while (!_buffersFilled.empty()) {
-                buf.reset(_buffersFilled.front().release());
+                buffer.reset(_buffersFilled.front().release());
                 _buffersFilled.pop();
 
                 // 消费
                 lock.unlock();
-                _output->append(buf->data(),buf->length());
+                _output->append(buffer->data(),buffer->length());
+                // buffer还原
+                buffer->reset();
                 lock.lock();
 
 //                if (_buffersAvailiable.empty()) {
-                    fprintf(stderr,"Put availiable buffer in backend!!\n");
+//                    fprintf(stderr,"Put availiable buffer in backend!!\n");
 //                }
-                _buffersAvailiable.push_back(std::move(buf));
+                _buffersAvailiable.push_back(std::move(buffer));
             }
         }
         _output->flush();
