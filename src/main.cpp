@@ -3,7 +3,7 @@
 
 static void mysleep(int ms)
 {
-    timespec t = { 0, 1000*100*ms };
+    timespec t = { 0, 10*ms };
     nanosleep(&t, NULL);
 }
 
@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
         LOG(INFO) << "hello world";
         LOG(WARNING) << "hello world";
         LOG(ERROR) << "hello world";
-        mysleep(10);
+    //    mysleep(10);
     }
     yamq::shutdownLogging();
     return 0;
