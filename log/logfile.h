@@ -20,9 +20,9 @@ namespace internal {
 /* 封装文件指针 */
 class AppendFileWrapper final {
     public:
-        AppendFileWrapper(const char* filepath,const char *mode):
+        AppendFileWrapper(const std::string &filepath):
             _filepath(filepath),
-            _filemode(mode),_writenChars(0) {
+            _writenChars(0) {
             open();
         }
 
@@ -68,9 +68,10 @@ class AppendFileWrapper final {
         }
 
         bool valid() {return _valid;}
+        static constexpr const char *FILE_MODE = "ae";
     private:
         int open() {
-            if ( NULL == (_raw = ::fopen(_filepath.c_str(),_filemode.c_str()))) {
+            if ( NULL == (_raw = ::fopen(_filepath.c_str(),FILE_MODE))) {
                 perror("Could't create file");
                 _valid = false;
             } else {
@@ -79,8 +80,8 @@ class AppendFileWrapper final {
                 setbuffer(_raw,_buf,bufSize);
 
                 // 存储文件属性
-                int fd = fileno(_raw); 
-                return fstat(fd,&_st);
+                int fd = ::fileno(_raw); 
+                return ::fstat(fd,&_st);
             }
             return -1;
         }
@@ -106,7 +107,7 @@ class AppendFileWrapper final {
         }
 
         std::string _filepath;
-        std::string _filemode;
+
         bool _valid;
         FILE *_raw;
         struct stat _st;
@@ -122,7 +123,7 @@ namespace log {
 using internal::AppendFileWrapper;
 class LogFile {
     public:
-        LogFile(const char *basename,const char *filename,uint64_t rollSize = kMaxRollSize,const char *extension = "log");
+        LogFile(const std::string &dirname,const std::string &filename,uint64_t rollSize = kMaxRollSize,const char *extension = "log");
         LogFile(const LogFile &) = delete;
         LogFile &operator=(LogFile &) = delete;
 
@@ -135,14 +136,12 @@ class LogFile {
         bool roll();
 
         std::unique_ptr<AppendFileWrapper> _file;
-        std::string _basename;
+        std::string _dirname;
         std::string _filename;
         std::string _extension; // 扩展名
 
-        /* 上一次roll的时间点 */
         Timestamp _lastTimestamp;
-        /* 上一次roll的文件路径 */
-        std::string _lastFilepath;
+        std::string _filepath;
         uint32_t _rollIndex;
 
         /*最大日志大小*/
@@ -150,7 +149,6 @@ class LogFile {
 
         std::mutex _mutex;
 
-        static constexpr const char *FILE_MODE = "ae";
         static const uint64_t kMaxRollSize = 2LLU*1024*1024*1024; // 2G字节
 };
 } // log
