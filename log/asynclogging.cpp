@@ -118,7 +118,7 @@ void LogWorker::flush() {
     _output->flush();
 }
 
-/* 消费者线程 */
+/* 生产者线程 */
 void LogWorker::append_async(const char *data,size_t len) {
     std::lock_guard<std::mutex> guard(_mutex);
 
@@ -130,7 +130,7 @@ void LogWorker::append_async(const char *data,size_t len) {
         if (_buffer.get()) {
             _buffersFilled.push(std::move(_buffer));
             _buffer.reset(nullptr);
-            // 通知生产者线程
+            // 通知消费者线程
             _condition.notify_one();
         }
 

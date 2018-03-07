@@ -91,6 +91,7 @@ class AppendFileWrapper final {
            int err = 0;
            if ( (err=::stat(_filepath.c_str(),&st)) != 0) {
                fprintf(stderr,"file is not exist!\n");
+               ::fclose(_raw);
                return open();
            } else {
                if (_st.st_ino != st.st_ino) {
