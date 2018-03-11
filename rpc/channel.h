@@ -5,32 +5,35 @@ class EventDispatcher;
 class Socket;
 class Channel;
 
+const int EV_NONE = 0,EV_READ = 1,EV_WRITE = 2,EV_UNKNOWN = 4;
 /* IO事件 */
 struct Event {
-    const static int EV_READ = 1,EV_WRITE = 2,EV_UNKNOWN = 4;
     int revents;
     int fd;
-    Channel *channel;
 };
 
 /* 负责分发IO事件 */
 class Channel {
     public:
-        virtual void HandleEvent(Event &);
+        Channel(EventDispatcher *evd,int fd) : _fd(fd),_events(EV_NONE),_evd(evd){}
+        virtual void HandleEvent(Event &) {}
+/*
         virtual void OnReadable();
         virtual void OnWriteable();
         virtual void OnClose();
         virtual void OnError();
+*/
 
         void Update();
         int Getfd() {return _fd;}
 
         /* 暂时这么简陋吧 */
-        void SetRevents(int revents) { _revents = revents;}
-        int GetRevents() {return _revents;}
+        void SetEvents(int events) { _events = events;}
+        int GetEvents() {return _events;}
     private:
         int _fd;
-        int _revents;
+        int _events;
+    protected:
         EventDispatcher *_evd;
 };
 

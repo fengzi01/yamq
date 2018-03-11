@@ -8,7 +8,8 @@ int PollSelector::Select(int timeout,vector<Event> &events) {
     active = ::poll(&(*_pollfds.begin()),_pollfds.size(),timeout);
     if (active >= 0) {
         if (0 == active) {
-            LOG(TRACE) << "Nothing happned";
+            LOG(TRACE) << "Nothing happned. pollfds.size:" << _pollfds.size();
+            LOG(TRACE) << "fd = " << _pollfds[0].fd << "," << _pollfds[0].revents << "," << _pollfds[0].events;
             return -1;
         }
         Channel *channel = nullptr;
@@ -17,7 +18,7 @@ int PollSelector::Select(int timeout,vector<Event> &events) {
                 --active;
                 channel = _dispatcher->FindChannel(pfd->fd);
                 // FIXME Assert channel == nullptr
-                Event event = {pfd->revents,pfd->fd,channel};
+                Event event = {pfd->revents,pfd->fd};
                 events.push_back(event); 
             }
         }
@@ -30,9 +31,13 @@ int PollSelector::Select(int timeout,vector<Event> &events) {
 }
 
 int PollSelector::Add(int fd,int events) {
-    pollfd pfd{fd,0,static_cast<short>(events)};
+    LOG(INFO) << "events = " << events << ",POLLIN = " << POLLIN << ",POLLOUT " << POLLOUT;
+    //short evs = ((EV_READ & events) | POLLIN) | ((EV_WRITE & events) | POLLOUT);
+    short evs = POLLIN | POLLOUT;
+    pollfd pfd{fd,0,evs};
     _pollfds.push_back(pfd);
-    _pollfds.back();
+    LOG(TRACE) << "fd = " << _pollfds[0].fd << "," << _pollfds[0].revents << "," << _pollfds[0].events;
+    LOG(INFO) << "Add fd = " << pfd.fd << ",evs = "<< pfd.revents;
     _fd_idx_map.insert(std::pair<int,size_t>(fd,_pollfds.size()-1));
     return 0;
 }
@@ -41,8 +46,9 @@ int PollSelector::Update(int fd,int events) {
     size_t idx;
     auto it = _fd_idx_map.find(fd);
     if (it == _fd_idx_map.end()) {return -1;}
+    short evs = ((EV_READ & events) & POLLIN) | ((EV_WRITE & events) & POLLOUT);
     idx = it->second;
-    _pollfds[idx].events = events;
+    _pollfds[idx].events = evs;
     return 0;
 }
 

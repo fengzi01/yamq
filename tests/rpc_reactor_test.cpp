@@ -1,0 +1,81 @@
+#include "rpc/event_dispatcher.h"
+#include "rpc/channel.h"
+#include "rpc/selector.h"
+
+#include <poll.h>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <unistd.h>
+
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+
+#include <netinet/in.h>
+#include <arpa/inet.h> // inet_addr
+#include <stdlib.h>
+
+const char * message = "hello world!";
+
+class TestChannel : public Channel {
+    public:
+        TestChannel(EventDispatcher *evd,int fd) : Channel(evd,fd){}
+    public:
+        virtual void HandleEvent(Event &ev) {
+            char buf[1024];
+            size_t n = 0;
+            if ((ev.revents & POLLIN) == POLLIN) {
+                // 可读事件
+                n = ::read(Getfd(),buf,1024);
+                buf[n+1] = '\0';
+                printf("fd: %d,recv: %s\n",ev.fd,buf);
+                ::close(Getfd());
+            } else if ((ev.revents & POLLOUT) == POLLOUT) {
+                write(Getfd(),message,strlen(message));
+                printf("fd: %d,write: %s\n",ev.fd,message);
+            } else {
+                printf("unknown event type\n");
+            }
+        }
+};
+
+#define BUFSIZE (4096)
+#define REMOTE_IP "127.0.0.1"
+#define REMOTE_PORT 8080
+
+static int CreateSocketfd() {
+    int client_fd;
+
+      struct sockaddr_in remote_addr;
+
+      memset(&remote_addr,0,sizeof(remote_addr));
+      remote_addr.sin_family = AF_INET;
+      remote_addr.sin_addr.s_addr = inet_addr(REMOTE_IP);
+      remote_addr.sin_port = htons(REMOTE_PORT);
+
+      // socket
+      if ((client_fd = ::socket(AF_INET,SOCK_STREAM,0)) < 0) {
+          perror("Socket Error");
+          return -1;
+      }
+
+      // connect()时由系统随机生成一个IP和port
+      if (::connect(client_fd,(struct sockaddr *)&remote_addr,sizeof(remote_addr)) < 0) {
+          perror("Connect Error:");
+          return -2;
+      }
+
+      return client_fd;
+}
+
+int main(int argc, char *argv[]) {
+    EventDispatcher evd;
+    int fd = CreateSocketfd();
+    TestChannel channel(&evd,fd);
+    channel.SetEvents(EV_READ | EV_WRITE);
+
+    evd.RegisterChannel(&channel);
+    evd.Run();
+}
