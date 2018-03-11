@@ -14,16 +14,18 @@ using std::map;
  */
 class Selector {
     public:
+        Selector(EventDispatcher *evd) : _evd(evd) {}
         virtual int Select(int timeout,vector<Event> &)  = 0;
         virtual int Add(int fd,int events) = 0;
         virtual int Update(int, int) = 0;
         virtual int Remove(int) = 0;
     protected:
-        EventDispatcher *_dispatcher;
+        EventDispatcher *_evd;
 };
 
 class PollSelector : public Selector {
     public:
+        PollSelector(EventDispatcher *evd) : Selector(evd) {}
         virtual int Select(int timeout,vector<Event> &) override;
         virtual int Add(int fd,int events) override;
         virtual int Update(int fd,int events) override;
@@ -33,5 +35,5 @@ class PollSelector : public Selector {
         map<int,size_t> _fd_idx_map;
 };
 
-unique_ptr<Selector> MakeDefaultSelector(); 
+unique_ptr<Selector> MakeDefaultSelector(EventDispatcher *evd); 
 #endif /* _POLLER_H */

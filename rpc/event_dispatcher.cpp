@@ -4,7 +4,7 @@
 #include "assert.h"
 #include "log/logging.h"
 
-EventDispatcher::EventDispatcher():_stop(false),_selector(MakeDefaultSelector()) {}
+EventDispatcher::EventDispatcher():_stop(false),_selector(MakeDefaultSelector(this)) {}
 
 void EventDispatcher::Run() {
     vector<Event> events;

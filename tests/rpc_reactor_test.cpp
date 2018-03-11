@@ -36,7 +36,8 @@ class TestChannel : public Channel {
                 write(Getfd(),message,strlen(message));
                 printf("fd: %d,write: %s\n",ev.fd,message);
             } else {
-                printf("unknown event type\n");
+                perror("unknown event type\n");
+                exit(0);
             }
         }
 };
@@ -74,7 +75,7 @@ int main(int argc, char *argv[]) {
     EventDispatcher evd;
     int fd = CreateSocketfd();
     TestChannel channel(&evd,fd);
-    channel.SetEvents(EV_READ | EV_WRITE);
+    channel.SetEvents(EV_WRITE|EV_READ);
 
     evd.RegisterChannel(&channel);
     evd.Run();

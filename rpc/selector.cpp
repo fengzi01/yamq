@@ -2,6 +2,7 @@
 #include "rpc/selector.h"
 #include "rpc/event_dispatcher.h"
 #include "log/logging.h"
+#include <assert.h>
 
 int PollSelector::Select(int timeout,vector<Event> &events) {
     int active;
@@ -9,15 +10,14 @@ int PollSelector::Select(int timeout,vector<Event> &events) {
     if (active >= 0) {
         if (0 == active) {
             LOG(TRACE) << "Nothing happned. pollfds.size:" << _pollfds.size();
-            LOG(TRACE) << "fd = " << _pollfds[0].fd << "," << _pollfds[0].revents << "," << _pollfds[0].events;
             return -1;
         }
         Channel *channel = nullptr;
         for (auto pfd = _pollfds.begin(); pfd != _pollfds.end() && active > 0; ++pfd) {
             if (pfd->revents > 0) {
                 --active;
-                channel = _dispatcher->FindChannel(pfd->fd);
-                // FIXME Assert channel == nullptr
+                channel = _evd->FindChannel(pfd->fd);
+                LOG(TRACE) << channel;
                 Event event = {pfd->revents,pfd->fd};
                 events.push_back(event); 
             }
@@ -31,13 +31,12 @@ int PollSelector::Select(int timeout,vector<Event> &events) {
 }
 
 int PollSelector::Add(int fd,int events) {
-    LOG(INFO) << "events = " << events << ",POLLIN = " << POLLIN << ",POLLOUT " << POLLOUT;
-    //short evs = ((EV_READ & events) | POLLIN) | ((EV_WRITE & events) | POLLOUT);
-    short evs = POLLIN | POLLOUT;
-    pollfd pfd{fd,0,evs};
+    LOG(INFO) << "events = " << events << ",POLLIN = " << POLLIN << ",POLLOUT = " << POLLOUT;
+    short evs = ((EV_READ & events) ? POLLIN : 0) | ((EV_WRITE & events) ? POLLOUT : 0);
+    pollfd pfd{fd,evs,0};
     _pollfds.push_back(pfd);
-    LOG(TRACE) << "fd = " << _pollfds[0].fd << "," << _pollfds[0].revents << "," << _pollfds[0].events;
-    LOG(INFO) << "Add fd = " << pfd.fd << ",evs = "<< pfd.revents;
+    LOG(INFO) << "Add fd = " << pfd.fd << ",evs = "<< pfd.events;
+    LOG(TRACE) << "fd = " << _pollfds[0].fd << ", revents = " << _pollfds[0].revents << ", events = " << _pollfds[0].events;
     _fd_idx_map.insert(std::pair<int,size_t>(fd,_pollfds.size()-1));
     return 0;
 }
@@ -64,6 +63,6 @@ int PollSelector::Remove(int fd) {
     return 0;
 }
 
-unique_ptr<Selector> MakeDefaultSelector() {
-    return unique_ptr<Selector>(new PollSelector);
+unique_ptr<Selector> MakeDefaultSelector(EventDispatcher *evd) {
+    return unique_ptr<Selector>(new PollSelector(evd));
 };
