@@ -24,3 +24,9 @@ foreach(LOG_TEST ${LOG_TESTS})
     add_executable(${LOG_TEST_WE} ${LOG_TEST} $<TARGET_OBJECTS:log_objects>)
 endforeach()
 
+file(GLOB RPC_TESTS "rpc*_test.cpp")
+foreach(RPC_TEST ${RPC_TESTS}) 
+    get_filename_component(RPC_TEST_WE ${RPC_TEST} NAME_WE)
+    add_executable(${RPC_TEST_WE} ${RPC_TEST} $<TARGET_OBJECTS:log_objects> $<TARGET_OBJECTS:rpc_objects>)
+endforeach()
+

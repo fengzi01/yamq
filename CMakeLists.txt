@@ -31,12 +31,15 @@ file(GLOB_RECURSE LOG_SOURCES "${PROJECT_SOURCE_DIR}/log/*.cpp")
 file(GLOB_RECURSE LOG_HEADERS "${PROJECT_SOURCE_DIR}/log/*.h")
 
 file(GLOB_RECURSE RPC_SOURCES "${PROJECT_SOURCE_DIR}/rpc/*.cpp")
+file(GLOB_RECURSE RPC_HEADERS "${PROJECT_SOURCE_DIR}/rpc/*.h")
+
 file(GLOB_RECURSE DI_SOURCES "${PROJECT_SOURCE_DIR}/di/*.cpp")
 file(GLOB_RECURSE SRC_SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
 set(LOG_LIB_NAME "yamq_log")
+set(RPC_LIB_NAME "yamq_rpc")
 
-if(test) 
+if(test)
     # add preprocessor macro
     add_definitions(-DUNITTEST)
 endif()
@@ -44,7 +47,7 @@ endif()
 # submodule
 #add_executable(${PROJECT_NAME} ${SRC_SOURCES})
 add_subdirectory(log)
-#add_subdirectory(rpc)
+add_subdirectory(rpc)
 #add_subdirectory(di)
 add_subdirectory(src)
 #ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_SOURCES} $<TARGET_OBJECTS:LOG_LIB>) 
