@@ -28,6 +28,10 @@ void EventDispatcher::Run() {
     }
 }
 
+void EventDispatcher::Stop() {
+    _stop = true;
+}
+
 int EventDispatcher::RegisterChannel(Channel *channel) {
     int fd = channel->Getfd();
     _selector->Add(fd,channel->GetEvents());

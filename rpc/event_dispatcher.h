@@ -17,7 +17,9 @@ class EventDispatcher {
         int UpdateChannel(Channel *);
         int RemoveChannel(Channel *);
         Channel* FindChannel(int fd);
+        void Stop(); 
     private:
+        // FIXME 原子操作?
         bool _stop;
         unique_ptr<Selector> _selector;  // for virtual function
         map<int,Channel *> _fd_channel_map;
