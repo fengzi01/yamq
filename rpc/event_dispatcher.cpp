@@ -28,7 +28,7 @@ void EventDispatcher::Run() {
 int EventDispatcher::RegisterChannel(Channel *channel) {
     int fd = channel->Getfd();
     _selector->Add(fd,channel->GetEvents());
-    _channel_map.insert(std::pair<int,Channel *>(fd,channel));
+    _fd_channel_map.insert(std::pair<int,Channel *>(fd,channel));
     return 0;
 }
 
@@ -38,19 +38,18 @@ int EventDispatcher::UpdateChannel(Channel *channel) {
 }
 
 int EventDispatcher::RemoveChannel(Channel *channel) {
-    auto it = _channel_map.find(channel->Getfd());
+    auto it = _fd_channel_map.find(channel->Getfd());
     assert(it->second == channel);
 
     int fd = channel->Getfd();
     _selector->Remove(fd);
-    _channel_map.erase(fd);
+    _fd_channel_map.erase(fd);
     return 0;
 }
 
 Channel *EventDispatcher::FindChannel(int fd) {
-    auto it = _channel_map.find(fd);
-
-    if (it == _channel_map.end()) {
+    auto it = _fd_channel_map.find(fd);
+    if (it == _fd_channel_map.end()) {
         return nullptr;
     }
     return it->second;

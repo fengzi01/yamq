@@ -20,7 +20,7 @@ class EventDispatcher {
     private:
         bool _stop;
         unique_ptr<Selector> _selector;  // for virtual function
-        map<int,Channel *> _channel_map;
+        map<int,Channel *> _fd_channel_map;
 };
 
 #endif
