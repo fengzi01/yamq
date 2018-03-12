@@ -2,6 +2,10 @@
 #include "rpc/channel.h"
 #include "rpc/selector.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #include <poll.h>
 #include <sys/types.h>
 #include <sys/uio.h>
@@ -26,19 +30,23 @@ class TestChannel : public Channel {
         virtual void HandleEvent(Event &ev) {
             char buf[1024];
             size_t n = 0;
+            printf("event type : 0x%02x\n",ev.revents);
             if ((ev.revents & POLLIN) == POLLIN) {
                 // 可读事件
                 n = ::read(Getfd(),buf,1024);
                 buf[n+1] = '\0';
                 printf("fd: %d,recv: %s\n",ev.fd,buf);
-                ::close(Getfd());
-            } else if ((ev.revents & POLLOUT) == POLLOUT) {
+                //::close(Getfd()); 
+                if ( 0 == n) {
+                    printf("close request from server\n");
+                    Remove();
+                }
+            }
+            if ((ev.revents & POLLOUT) == POLLOUT) {
                 write(Getfd(),message,strlen(message));
                 printf("fd: %d,write: %s\n",ev.fd,message);
-            } else {
-                perror("unknown event type\n");
-                exit(0);
-            }
+                SetEvents(EV_READ);
+            } 
         }
 };
 
@@ -74,9 +82,11 @@ static int CreateSocketfd() {
 int main(int argc, char *argv[]) {
     EventDispatcher evd;
     int fd = CreateSocketfd();
-    TestChannel channel(&evd,fd);
-    channel.SetEvents(EV_WRITE|EV_READ);
+    int fd2 = CreateSocketfd();
+    TestChannel channel(&evd,fd2);
+    unique_ptr<Channel> pChannel(new TestChannel(&evd,fd));
+    channel.SetEvents(EV_WRITE);
+    pChannel->SetEvents(EV_WRITE);
 
-    evd.RegisterChannel(&channel);
     evd.Run();
 }

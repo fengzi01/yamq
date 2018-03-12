@@ -15,8 +15,8 @@ struct Event {
 /* 负责分发IO事件 */
 class Channel {
     public:
-        Channel(EventDispatcher *evd,int fd) : _fd(fd),_events(EV_NONE),_evd(evd){}
-        virtual void HandleEvent(Event &) {}
+        Channel(EventDispatcher *evd,int fd) : _fd(fd),_events(EV_NONE),_evd(evd),_attached(false){}
+        virtual void HandleEvent(Event &) = 0;
 /*
         virtual void OnReadable();
         virtual void OnWriteable();
@@ -25,16 +25,19 @@ class Channel {
 */
 
         void Update();
+        void Remove();
         int Getfd() {return _fd;}
 
         /* 暂时这么简陋吧 */
-        void SetEvents(int events) { _events = events;}
+        void SetEvents(int events) { _events = events;Update();}
         int GetEvents() {return _events;}
+
+        bool Attached() {return _attached;}
     private:
         int _fd;
         int _events;
-    protected:
         EventDispatcher *_evd;
+        bool _attached;
 };
 
 class ConnectionChannel : public Channel {

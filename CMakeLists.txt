@@ -59,7 +59,7 @@ add_subdirectory(src)
 # TEST
 if(test)
     enable_testing()
-    MESSAGE(STATUS "Enable Test:" ${test})
+    MESSAGE(STATUS "Test : " ${test})
     add_subdirectory(tests)
 endif()
 

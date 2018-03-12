@@ -83,7 +83,7 @@ void LogCapture::addPrefix() {
         buf.offset(len-1);
     }
     _stream << " " << static_cast<int>(getTid()) << " ";
-    _stream << _file << ":" << _line << "] "; 
+    _stream << ::strstr(_file,"yamq") << ":" << _line << "] "; 
 }
 
 LogCapture::LogCapture(
