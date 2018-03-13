@@ -10,11 +10,8 @@
 #include "rpc/timer/timer_queue_base.h"
 #include "rpc/channel.h"
 
-/* timerfd */
-int CreateTimerfd();
-int ResetTimerfd();
-void ReadTimerfd();
 
+struct Timer;
 
 // timer queue implemented with priority queue(min-heap)
 //
@@ -24,18 +21,21 @@ void ReadTimerfd();
 //
 class TimerQueue : public TimerQueueBase, public Channel
 {
-    struct Timer;
 public:
     TimerQueue(EventDispatcher *evd);
     ~TimerQueue();
 
     int AddTimer(uint32_t time, TimerCallback cb) override;
 
+    void Start();
+
     bool CancelTimer(int id) override;
 
-    void Update() override;
+    void PerTick() override;
 
     int Size() const { return (int)heap_.size(); }
+
+    virtual void OnRead() override;
 
 private:
     void clear();

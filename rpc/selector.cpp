@@ -4,13 +4,25 @@
 #include "log/logging.h"
 #include <assert.h>
 
+static int trans_event(int revents) {
+    int e = EV_NONE;
+    if (revents & POLLIN) {
+        e |= EV_READ;
+    }
+    if (revents & POLLOUT) {
+        e |= EV_WRITE;
+    }
+    return e;
+}
+
 int PollSelector::Select(int timeout,vector<Event> &events) {
     int active;
-    LOG(TRACE) << "poll ...";
     active = ::poll(&(*_pollfds.begin()),_pollfds.size(),timeout);
     if (active >= 0) {
         if (0 == active) {
-            LOG(TRACE) << "Nothing happned. pollfds.size:" << _pollfds.size();
+            //LOG(TRACE) << "Nothing happned. pollfds.size:" << _pollfds.size();
+            //LOG(TRACE) << "fd = " << _pollfds[0].fd << " ev = " << _pollfds[0].events
+            //    << " rev = " << _pollfds[0].revents;
             return -1;
         }
         LOG(TRACE) << "active events = " << active;
@@ -20,8 +32,10 @@ int PollSelector::Select(int timeout,vector<Event> &events) {
                 --active;
                 //channel = _evd->FindChannel(pfd->fd);
                 // FIXME Event type ?
-                Event event = {pfd->revents,pfd->fd};
+                Event event = {trans_event(pfd->revents),pfd->fd};
                 events.push_back(event); 
+
+                LOG(TRACE) << "event: fd = " << event.fd << " revents " << event.revents;
             }
         }
     } else {

@@ -17,5 +17,7 @@ public:
     static std::string CurrentTimeString(int64_t timepoint);
 
     // Get current tick count, in nanoseconds
-    static uint64_t GetNowTickCount();
+    static uint64_t GetNowTicks();
+
+    static struct timespec TransTicks(uint64_t t); 
 };

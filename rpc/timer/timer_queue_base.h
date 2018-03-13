@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <functional>
 #include <unordered_map>
+#include <vector>
 
 // callback on timed-out
 typedef std::function<void()> TimerCallback;
@@ -29,12 +30,13 @@ public:
     virtual bool CancelTimer(int id) = 0;
 
     // per-tick bookkeeping.
-    virtual void Update() = 0;
+    virtual void PerTick() = 0;
 
     virtual int Size() const = 0;
 
+    virtual int64_t WaitTimeUsec() {}
+
 protected:
-    virtual void getReadyTimer(long long now) {}
 
     int nextSlot();
 

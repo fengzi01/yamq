@@ -25,7 +25,7 @@ std::string Clock::CurrentTimeString(int64_t timepoint)
     return std::string(buffer, n);
 }
 
-uint64_t Clock::GetNowTickCount()
+uint64_t Clock::GetNowTicks()
 {
 #ifdef _WIN32
     uint64_t freq = 0;
@@ -41,10 +41,18 @@ uint64_t Clock::GetNowTickCount()
     return (now * 1000000000UL) / freq;
 #else
     timespec ts;
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0)
+    //if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0)
+    if (clock_gettime(CLOCK_REALTIME, &ts) < 0)
     {
         LOG(FATAL) << "error!";
     }
     return (ts.tv_sec * 1000000000UL) + ts.tv_nsec;
 #endif
+}
+
+struct timespec Clock::TransTicks(uint64_t ticks) {
+    struct timespec t;
+    t.tv_sec = ticks / 1000000000UL;
+    t.tv_nsec = ticks % 1000000000UL; 
+    return t;
 }
