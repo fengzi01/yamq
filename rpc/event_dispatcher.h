@@ -5,7 +5,7 @@
 #include <vector>
 #include <mutex>
 #include "rpc/channel.h"
-#include "rpc/timer.h"
+#include "rpc/timer/timer_queue_ll.h"
 
 using std::unique_ptr;
 class Selector;
@@ -24,6 +24,9 @@ class EventDispatcher {
 
         void AddPendingFunctor(Functor &&cb);
         void Wakeup();
+
+        int AddTimer(int64_t time_ms,int interval,Functor cb);
+        void CancelTimer(int timer_id);
     private:
         void runPendingFunctor();
         // FIXME 原子操作?
@@ -37,6 +40,8 @@ class EventDispatcher {
         // FIXME or pipe ? 
         int _wakeup_fds[2];
         unique_ptr<Channel> _wakeup_channel;
+
+        unique_ptr<TimerQueue_linked_list> _timer_queue;
 };
 
 #endif

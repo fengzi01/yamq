@@ -15,13 +15,14 @@ struct Timer
     int index = -1;
     int id = -1;
     uint64_t expire = 0;
+    uint64_t time = 0;
     int64_t interval = -1; // -1 重复 0 不重复 n 重复次数
     int64_t elapse = -1;
     TimerCallback cb;
 };
 
 TimerQueue_linked_list::TimerQueue_linked_list(EventDispatcher *evd)
-    :twepoch(Clock::GetNowTicks()), _linked_list(10)
+    :twepoch(Clock::GetNowTicks())
 {
     _ref.rehash(16);
     _fd = createTimerfd();
@@ -68,7 +69,7 @@ int TimerQueue_linked_list::AddTimer(uint64_t time,uint64_t interval, TimerCallb
         timer = new Timer();
     }
     
-    int id = nextSlot();
+    int id = nextId();
 
     timer->id = id;
     timer->expire = expire;
@@ -76,16 +77,19 @@ int TimerQueue_linked_list::AddTimer(uint64_t time,uint64_t interval, TimerCallb
     timer->index = -1;
     timer->elapse = interval;
     timer->interval = interval;
+    timer->time = time;
 
-    LOG(TRACE) << "Add Timer. id = " << timer->id << " expire = " << timer->expire / 1000000UL << "ms";
+    LOG(TRACE) << "Add Timer. id = " << timer->id << " expire = " << timer->expire / 1000000UL << " ms";
 
     _ref[timer->id] = timer;
     if ( _linked_list.empty() || _linked_list.back()->expire > expire) {
-        _linked_list.push_back(std::move(timer));
+        _linked_list.push_back(timer);
+
+        LOG(TRACE) << "_linked_list.back() " << _linked_list.back()->id << " expire = " << _linked_list.back()->expire/1000000UL;
         // reset timerfd
         resetTimerfd(this->_fd,twepoch + expire);
     } else {
-        _linked_list.push_back(std::move(timer));
+        _linked_list.push_back(timer);
         std::sort(_linked_list.begin(), _linked_list.end(), 
             [](Timer *lhs,   Timer *rhs) {
                 return  lhs->expire > rhs->expire;
@@ -117,7 +121,15 @@ bool TimerQueue_linked_list::CancelTimer(int id)
 }
 
 int64_t TimerQueue_linked_list::WaitTimeUsec() {
+    LOG(TRACE) << "_linked_list.empty() " << _linked_list.empty() << " size = " << _linked_list.size();
+    LOG(TRACE) << "========================";
+    LOG(TRACE) << "SIZE = " << _linked_list.size();
+    for ( auto node : _linked_list) {
+        LOG(TRACE) << node->expire/1000000UL;
+    }
+    LOG(TRACE) << "========================";
     if (!_linked_list.empty()) {
+        LOG(TRACE) << "expire = " << _free_list[0]->expire / 1000000UL;
         return _free_list.back()->expire; 
     }
     return -1;
@@ -126,31 +138,43 @@ int64_t TimerQueue_linked_list::WaitTimeUsec() {
 void TimerQueue_linked_list::PerTick()
 {
     uint64_t now = Clock::GetNowTicks() - twepoch;
+    std::vector<Timer *> expired;
+    LOG(TRACE) << "========================";
+    LOG(TRACE) << "SIZE = " << _linked_list.size();
+    for ( auto node : _linked_list) {
+        LOG(TRACE) << node->expire/1000000UL;
+    }
+    LOG(TRACE) << "NOW = " << now / 1000000UL;
+    LOG(TRACE) << "========================";
     while (!_linked_list.empty())
     {
         if (now < _linked_list.back()->expire)
         {
+            LOG(TRACE) << " now is not expired";
             break;
         }
         auto node = _linked_list.back();
-        if (node->cb)
-        {
-            --node->elapse; 
+        expired.push_back(node);
+        _linked_list.pop_back();
+    }
+
+    for ( auto node : expired) {
+        if (node->elapse > 0) {
+            --(node->elapse);
             node->cb();
-        } else {
-            // 没有执行意义
-            node->elapse = -1;
         }
-        if (node->elapse < 0) {
-            _ref.erase(node->id);
-            _free_list.push_back(node);
-        } else {
-            _linked_list.push_back(node);
+        if (node->elapse > 0) {
+            // FIXME
+            LOG(TRACE) << "ADD TIMER " << node->id << " ela = " << node->elapse;
+            AddTimer(node->time,node->elapse,node->cb);
         }
+        _free_list.push_back(node);
     }
 }
 
 void TimerQueue_linked_list::OnRead() {
+    LOG(TRACE) << "_LINK_LIST " << _linked_list.size();
+    LOG(TRACE) << _linked_list.back()->id;
     uint64_t now = Clock::GetNowTicks();
     readTimerfd(_fd,now);
     PerTick();

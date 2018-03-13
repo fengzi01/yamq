@@ -49,25 +49,3 @@ private:
     std::vector<Timer*> heap_;
 };
 
-class TimerQueue_linked_list : public TimerQueueBase, public Channel {
-    TimerQueue_linked_list(EventDispatcher *evd);
-    virtual ~TimerQueue_linked_list();
-
-    int AddTimer(uint64_t time,uint64_t interval,TimerCallback cb) override;
-    bool CancelTimer(int id) override;
-    void PerTick() override;
-    int Size() const override { return _linked_list.size(); }
-    virtual int64_t WaitTimeUsec() override {}
-    virtual void OnRead() override;
-
-    void Start();
-
-private:
-    void clear();
-    bool siftdown(int x, int n);
-    void siftup(int j);
-
-private:
-    const int64_t twepoch; // custom epoch
-    std::list<std::unique_ptr<Timer>> _linked_list;
-};

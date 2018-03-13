@@ -8,7 +8,6 @@ endif()
 
 MESSAGE(STATUS "This is cmake SOURCE dir:" ${CMAKE_SOURCE_DIR})
 MESSAGE(STATUS "This is project SOURCE dir:" ${PROJECT_SOURCE_DIR})
-MESSAGE(STATUS "source:" ${LOG_SOURCES})
 
 add_library(log_objects OBJECT ${LOG_SOURCES})
 set_property(TARGET ${log_objects} PROPERTY POSITION_INDEPENDENT_CODE 1)

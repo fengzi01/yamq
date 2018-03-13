@@ -119,7 +119,7 @@ int TimerQueue::AddTimer(uint64_t time,uint64_t interval, TimerCallback cb)
     int64_t expire = Clock::CurrentTimeMillis() - twepoch + time;
     Timer* node = new Timer;
 
-    node->id = nextSlot();
+    node->id = nextId();
     node->expires = expire;
     node->cb = cb;
     node->index = heap_.size();

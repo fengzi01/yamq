@@ -4,7 +4,7 @@
 
 #include "rpc/timer/timer_queue_base.h"
 
-int TimerQueueBase::nextSlot()
+int TimerQueueBase::nextId()
 {
     int next = _slot + 1;
     for (;;)

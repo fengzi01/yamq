@@ -33,11 +33,14 @@ class WakeupChannel : public Channel {
         }
 };
 
-EventDispatcher::EventDispatcher():_stop(false),_selector(MakeDefaultSelector(this)) {
+EventDispatcher::EventDispatcher():
+    _stop(false),_selector(MakeDefaultSelector(this)),_timer_queue(new TimerQueue_linked_list(this)) {
     _wakeup_fds[0] = createEventfd();
     // fd[1] is no use
     _wakeup_fds[1] = 0;
     _wakeup_channel.reset(new WakeupChannel(this,_wakeup_fds[0]));
+
+    _timer_queue->SetEvents(EV_READ|EV_WRITE);
 }
 
 void EventDispatcher::Run() {
@@ -129,3 +132,12 @@ void EventDispatcher::runPendingFunctor() {
         functors[i]();
     }
 }
+
+int EventDispatcher::AddTimer(int64_t time_ms,int interval,Functor cb) {
+    return _timer_queue->AddTimer(time_ms * 1000000UL,interval,cb);
+}
+void EventDispatcher::CancelTimer(int timer_id) {
+    _timer_queue->CancelTimer(timer_id);
+}
+
+

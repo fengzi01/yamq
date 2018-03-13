@@ -38,7 +38,7 @@ public:
 
 protected:
 
-    int nextSlot();
+    int nextId();
 
     // FIXME
     int _slot = 0;
