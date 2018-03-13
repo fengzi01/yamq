@@ -31,7 +31,7 @@ class TestChannel : public Channel {
             char buf[1024];
             size_t n = 0;
             printf("event type : 0x%02x\n",ev.revents);
-            if ((ev.revents & POLLIN) == POLLIN) {
+            if (ev.revents &EV_READ) {
                 // 可读事件
                 n = ::read(Getfd(),buf,1024);
                 buf[n+1] = '\0';
@@ -42,7 +42,7 @@ class TestChannel : public Channel {
                     Remove();
                 }
             }
-            if ((ev.revents & POLLOUT) == POLLOUT) {
+            if (ev.revents & EV_WRITE) {
                 write(Getfd(),message,strlen(message));
                 printf("fd: %d,write: %s\n",ev.fd,message);
                 SetEvents(EV_READ);

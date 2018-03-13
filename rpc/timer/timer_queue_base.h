@@ -24,7 +24,7 @@ public:
 
     // add a timer to schedule after `time` milliseconds.
     // returns an unique id identify this timer.
-    virtual int AddTimer(uint32_t time, TimerCallback cb) = 0;
+    virtual int AddTimer(uint64_t time,uint64_t interval,TimerCallback cb) = 0;
 
     // cancel a timer by id.
     virtual bool CancelTimer(int id) = 0;
