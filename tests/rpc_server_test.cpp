@@ -34,18 +34,29 @@ void OnMessage(Connection *con,char *buff,int len) {
     //con->Send(buf,len);
 }
 
+void OnClose(Connection *con) {
+    InetAddr addr = con->GetRemoteSide();
+    int fd = con->Getfd();
+    char buf[1024];
+    fprintf(stderr,"User layer: on close IPV4 ip = %s, port = %d, socket = %d\n",  
+            inet_ntop(AF_INET, &addr.ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
+            ntohs(addr.ip_addr.addr4.sin_port), fd);
+
+}
+
 int main(int argc,char *argv[])
 {
     yamq::initLogging(argv[0]);
     InetAddr addr;
     addr.ip_type = ipv4;
     addr.ip_addr.addr4.sin_family = AF_INET;
-    addr.ip_addr.addr4.sin_port = htons(8080);
+    addr.ip_addr.addr4.sin_port = htons(8081);
     addr.ip_addr.addr4.sin_addr.s_addr = INADDR_ANY;
 
     Server server(addr);
     server.SetConnectCb(OnConnection);
     server.SetMessageCb(OnMessage);
+    server.SetCloseCb(OnClose);
     server.Start();
 
     yamq::shutdownLogging();

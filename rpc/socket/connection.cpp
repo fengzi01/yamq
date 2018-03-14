@@ -16,6 +16,7 @@ void Connection::OnRead() {
         if (_close_cb) {
             _close_cb(this);
         }
+        return;
     }
     if (_message_cb) {
         _message_cb(this,buf,n);
