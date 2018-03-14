@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 #include <netinet/in.h>
 // SOCKADDR_IN就是TCP/IP网络体系中的专用套接字地址表示结构体。
 
@@ -30,3 +31,6 @@ struct InetAddr {
         struct sockaddr_in6 addr6;
     } ip_addr;
 };
+
+using ConnectionCallback = std::function<void(int fd,const InetAddr &)>;
+

@@ -9,12 +9,12 @@
 #include <unistd.h>
 #include "log/logging.h"
 
-void onConnection(int fd, InetAddr *peeraddr) {
-    InetAddr *addr = peeraddr;
+void onConnection(int fd, const InetAddr &peeraddr) {
+    InetAddr addr = peeraddr;
     char buf[1024];
     fprintf(stderr,"New connection IPV4 ip = %s, port = %d, socket = %d\n",  
-            inet_ntop(AF_INET, &addr->ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
-            ntohs(addr->ip_addr.addr4.sin_port), fd);
+            inet_ntop(AF_INET, &addr.ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
+            ntohs(addr.ip_addr.addr4.sin_port), fd);
     close(fd);
 }
 
@@ -28,7 +28,7 @@ int main(int argc,char *argv[])
     addr.ip_addr.addr4.sin_addr.s_addr = INADDR_ANY;
     EventDispatcher evd;
 
-    Acceptor acceptor(&evd,&addr);
+    Acceptor acceptor(&evd,addr);
     LOG(TRACE) << "acceptor";
     acceptor.SetConnectionCb(onConnection);
     acceptor.SetEvents(EV_READ);

@@ -4,7 +4,7 @@
 #include <arpa/inet.h>  // inet_ntop
 #include <unistd.h>
 
-int createAcceptSocketOrDie(const InetAddr *addr)
+static int createAcceptSocketOrDie(InetAddr &addr)
 {
     /**
      * AF_INET（又称 PF_INET）是 IPv4 网络协议的套接字类型，
@@ -13,7 +13,7 @@ int createAcceptSocketOrDie(const InetAddr *addr)
      * AF_INET 相比 AF_UNIX 更具通用性，因为 Windows 上有 AF_INET 而没有 AF_UNIX。
      */
     int sockfd = 0;
-    if (addr->ip_type == ipv4) {
+    if (addr.ip_type == ipv4) {
         sockfd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
     } else {
         sockfd = ::socket(AF_INET6, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
@@ -26,25 +26,26 @@ int createAcceptSocketOrDie(const InetAddr *addr)
     LOG(TRACE) << "Create acceptor fd  = " << sockfd;
     // bind
     int ret = 0;
-    if (addr->ip_type == ipv4) {
-        ret = ::bind(sockfd, (struct sockaddr *) &addr->ip_addr, sizeof(struct sockaddr));
+    if (addr.ip_type == ipv4) {
+        ret = ::bind(sockfd, (struct sockaddr *) &addr.ip_addr, sizeof(struct sockaddr));
     } else {
-        ret = ::bind(sockfd, (struct sockaddr *) &addr->ip_addr, sizeof(struct sockaddr_in6));
+        ret = ::bind(sockfd, (struct sockaddr *) &addr.ip_addr, sizeof(struct sockaddr_in6));
     }
     if (ret < 0)
     {
         LOG(FATAL) << "sockets::bindOrDie";
+        exit(-1);
     }
     return sockfd;
 }
 
-int listenOrDie(int fd) {
+static int listenOrDie(int fd) {
     if (::listen(fd,SOMAXCONN) < 0 ) {
         LOG(FATAL) << "listenOrDie fd = " << fd;
     }
 }
 
-int acceptConnect(int sockfd, InetAddr *addr)
+static int acceptConnect(int sockfd, InetAddr *addr)
 {
     socklen_t addr_len = static_cast<socklen_t>(sizeof addr->ip_addr);
     int connfd = ::accept4(sockfd, (struct sockaddr *)&addr->ip_addr,
@@ -93,11 +94,11 @@ int acceptConnect(int sockfd, InetAddr *addr)
     return connfd;
 }
 
-Acceptor::Acceptor(EventDispatcher *evd,const InetAddr *addr):
+Acceptor::Acceptor(EventDispatcher *evd,const InetAddr &addr):
     _listening(false),
-    _inet_addr(*addr) {
+    _inet_addr(addr) {
     _evd = evd;
-    _fd = createAcceptSocketOrDie(addr);
+    _fd = createAcceptSocketOrDie(_inet_addr);
 }
 
 Acceptor::~Acceptor() {
@@ -113,7 +114,7 @@ void Acceptor::OnRead() {
     InetAddr peeraddr = {_inet_addr.ip_type};
     int newfd = acceptConnect(_fd,&peeraddr);
     if (_conn_cb) {
-        _conn_cb(newfd,&peeraddr);
+        _conn_cb(newfd,peeraddr);
         //_conn_cb();
     } else {
         ::close(newfd);
