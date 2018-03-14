@@ -44,12 +44,4 @@ class Channel {
         bool _attached;
 };
 
-class ConnectionChannel : public Channel {
-};
-
-class AcceptorChannel : public Channel {
-};
-
-class ConnectorChannel : public Channel {
-};
 #endif
