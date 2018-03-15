@@ -12,7 +12,7 @@
 #include "rpc/socket/server.h"
 #include <stdio.h>
 
-void OnConnection(Connection *con) {
+void OnConnection(ConnectionPtr con) {
     InetAddr addr = con->GetRemoteSide();
     int fd = con->Getfd();
     char buf[1024];
@@ -21,7 +21,7 @@ void OnConnection(Connection *con) {
             ntohs(addr.ip_addr.addr4.sin_port), fd);
 }
 
-void OnMessage(Connection *con,char *buff,int len) {
+void OnMessage(ConnectionPtr con,char *buff,int len) {
     buff[len+1] = '\0';
     InetAddr addr = con->GetRemoteSide();
     int fd = con->Getfd();
@@ -34,7 +34,7 @@ void OnMessage(Connection *con,char *buff,int len) {
     //con->Send(buf,len);
 }
 
-void OnClose(Connection *con) {
+void OnClose(ConnectionPtr con) {
     InetAddr addr = con->GetRemoteSide();
     int fd = con->Getfd();
     char buf[1024];

@@ -6,12 +6,13 @@
 #include <memory>
 
 class Connection;
-using ConnectCallback = std::function<void (Connection *)>;
+typedef std::shared_ptr<Connection> ConnectionPtr;
+using ConnectCallback = std::function<void (const ConnectionPtr &)>;
 //using MessageCallback = std::function<void (Connection *,IoBuffer *)>;
-using MessageCallback = std::function<void (Connection *,char *buf,int len)>;
-using CloseCallback = std::function<void (Connection *)>;
+using MessageCallback = std::function<void (const ConnectionPtr &,char *buf,int len)>;
+using CloseCallback = std::function<void (const ConnectionPtr &)>;
 
-class Connection : public Channel {
+class Connection : public Channel, public std::enable_shared_from_this<Connection> {
     public:
         Connection(int64_t id,EventDispatcher *evd,int fd,const InetAddr &local_side,const InetAddr &remote_side);
         void SetMessageCb(MessageCallback cb) {_message_cb = cb;}

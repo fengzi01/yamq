@@ -14,12 +14,12 @@ void Connection::OnRead() {
     int n = ::read(_fd, buf, 1000);
     if ( 0 == n ) {
         if (_close_cb) {
-            _close_cb(this);
+            _close_cb(shared_from_this());
         }
         return;
     }
     if (_message_cb) {
-        _message_cb(this,buf,n);
+        _message_cb(shared_from_this(),buf,n);
     }
 }
 

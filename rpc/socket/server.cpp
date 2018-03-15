@@ -35,8 +35,8 @@ void Server::createConnection(int sockfd,const InetAddr &peeraddr) {
     //fprintf(stderr,"CreateConnection IPV4 ip = %s, port = %d, socket = %d\n",  
     //        inet_ntop(AF_INET, &peeraddr.ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
     //            ntohs(peeraddr.ip_addr.addr6.sin6_port), sockfd);
-    Connection * con = new Connection(id,_evd.get(),sockfd,_acceptor->GetInetAddr(),peeraddr);
-    _ref[id] = con;
+    ConnectionPtr con = std::make_shared<Connection>(id,_evd.get(),sockfd,_acceptor->GetInetAddr(),peeraddr);
+    _ref.insert(std::make_pair(id, con)); 
 
     con->SetMessageCb(_message_cb);
     con->SetCloseCb(std::bind(&Server::closeConnection,this,std::placeholders::_1));
@@ -47,20 +47,22 @@ void Server::createConnection(int sockfd,const InetAddr &peeraddr) {
     }
 }
 
-void Server::closeConnection(Connection *con) {
+void Server::closeConnection(const ConnectionPtr &con) {
     con->SetEvents(EV_NONE);
     if (_close_cb) {
         _close_cb(con);
     }
 }
 
-void Server::removeConnection(Connection *con) {
+void Server::removeConnection(const ConnectionPtr &con) {
     if (con->GetEvents() != EV_NONE) {
         closeConnection(con);
     }
-    _ref[con->GetId()] = nullptr;
+    int64_t id = con->GetId();
+    _ref.erase(id);
     con->Remove();
-    delete con;
+
+    ConnectionPtr c = con;
 }
 
 void Server::Start() {

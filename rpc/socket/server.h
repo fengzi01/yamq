@@ -14,16 +14,16 @@ class Server {
         void SetCloseCb(CloseCallback cb) {_close_cb = cb;}
 
         void Start();
-        Connection * GetConnection(int64_t id) {return _ref[id];}
+        const ConnectionPtr& GetConnection(int64_t id) {return _ref[id];}
     private:
         void createConnection(int sockfd,const InetAddr &peeraddr);
-        void closeConnection(Connection *);
-        void removeConnection(Connection *);
+        void closeConnection(const ConnectionPtr &);
+        void removeConnection(const ConnectionPtr &);
 
         int nextId();
         int _current_id = 0;
 
-        std::unordered_map<int64_t,Connection *> _ref; // hash reference to id 
+        std::unordered_map<int64_t,ConnectionPtr> _ref; // hash reference to id 
 
         ConnectCallback _connect_cb;
         MessageCallback _message_cb;
