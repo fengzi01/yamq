@@ -49,6 +49,12 @@ Thread::Thread(ThreadFunc &&func):_func(func),_joined(false),_tid(0) {
     startThread();
 }
 
+Thread::~Thread() {
+    if (!_joined) {
+        Detach();
+    }
+}
+
 void Thread::startThread() {
     std::unique_ptr<ThreadData> data(new ThreadData(_func,&_tid));
     if (pthread_create(&_ptid,NULL,&native_thread_routine,data.get())) {
@@ -67,7 +73,7 @@ void Thread::Join() {
 
 void Thread::Detach() {
     if (_joined) {
-        fprintf(stderr,"detach already joined thread!");
+        fprintf(stderr,"detach already joined thread!\n");
         return;
     }
     pthread_detach(_ptid);

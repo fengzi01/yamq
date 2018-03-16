@@ -12,9 +12,7 @@ class Thread {
        explicit Thread(const ThreadFunc&);
        explicit Thread(ThreadFunc &&);
 
-       ~Thread() {
-           Detach();
-       }
+       ~Thread();
 
        Thread(Thread &) = delete;
        Thread(const Thread &) = delete;
@@ -46,5 +44,7 @@ namespace this_thread {
 
     static_assert(std::is_same<int,pid_t>::value,"pid_t must is same as int!");
     int GetTid();
+    const char *GetTid_str() { return tid_str; }
+    int GetTid_strlen() { return tid_strlen; }
 }
 }
