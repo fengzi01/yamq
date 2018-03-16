@@ -26,7 +26,7 @@ TimerQueue_linked_list::TimerQueue_linked_list(EventDispatcher *evd)
 {
     _ref.rehash(16);
     _fd = createTimerfd();
-    LOG(TRACE) << "timerfd = " << _fd;
+    LOG(TRACE) << "create timerfd = " << _fd;
     _evd = evd;
 }
 
@@ -52,7 +52,9 @@ int TimerQueue_linked_list::AddTimer(uint64_t time,uint64_t interval, TimerCallb
 {
     uint64_t now = Clock::GetNowTicks();
     uint64_t expire = now - twepoch + time;
+
     Timer *timer;
+
     if (!_free_list.empty()) {
         timer = _free_list.back();
         _free_list.pop_back();
@@ -96,6 +98,7 @@ bool TimerQueue_linked_list::CancelTimer(int id)
     if (nullptr == node) {
         return false;
     }
+
     if (node->expire <= _linked_list.back()->expire) {
         // back
         _linked_list.pop_back();
@@ -106,10 +109,10 @@ bool TimerQueue_linked_list::CancelTimer(int id)
     _ref.erase(id);
 
     std::sort(_linked_list.begin(), _linked_list.end(), 
-            [](Timer *lhs,   Timer *rhs) {
+        [](Timer *lhs,   Timer *rhs) {
             return  lhs->expire > rhs->expire;
-            }
-            );
+        }
+    );
 
     _free_list.push_back(node);
     return true;
