@@ -5,7 +5,7 @@ class EventDispatcher;
 class Socket;
 class Channel;
 
-const int EV_NONE = 0x00,EV_READ = 0x01,EV_WRITE = 0x02,EV_UNKNOWN = 0x04,EV_ERROR = 0x08;
+const int EV_NONE = 0x00,EV_READ = 0x01,EV_WRITE = 0x02,EV_UNKNOWN = 0x04,EV_ERROR = 0x08, EV_CLOSE = 0x10;
 /* IO事件 */
 struct Event {
     int revents;

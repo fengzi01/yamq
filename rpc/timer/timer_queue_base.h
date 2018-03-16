@@ -34,7 +34,9 @@ public:
 
     virtual int Size() const = 0;
 
-    virtual int64_t WaitTimeUsec() {}
+    virtual int64_t WaitTimeUsec() {return 0;}
+
+    virtual void Start() {}
 
 protected:
 

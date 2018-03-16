@@ -3,8 +3,9 @@
 #include "rpc/event_dispatcher.h"
 #include "log/logging.h"
 #include <assert.h>
+#include "rpc/epoll_selector.h"
 
-static int trans_event(int revents) {
+static int _trans_ev(int revents) {
     int e = EV_NONE;
     if (revents & POLLIN) {
         e |= EV_READ;
@@ -32,7 +33,7 @@ int PollSelector::Select(int timeout,vector<Event> &events) {
                 --active;
                 //channel = _evd->FindChannel(pfd->fd);
                 // FIXME Event type ?
-                Event event = {trans_event(pfd->revents),pfd->fd};
+                Event event = {_trans_ev(pfd->revents),pfd->fd};
                 events.push_back(event); 
 
                 LOG(TRACE) << "event: fd = " << event.fd << " revents " << event.revents;
@@ -89,5 +90,6 @@ int PollSelector::Remove(int fd) {
 }
 
 unique_ptr<Selector> MakeDefaultSelector(EventDispatcher *evd) {
-    return unique_ptr<Selector>(new PollSelector(evd));
+    return unique_ptr<Selector>(new EpollSelector(evd));
+    //return unique_ptr<Selector>(new PollSelector(evd));
 };

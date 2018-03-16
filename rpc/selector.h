@@ -4,10 +4,12 @@
 #include "rpc/channel.h"
 #include <memory>
 #include <map>
+#include <unordered_map>
 #include <poll.h>
 using std::unique_ptr;
 using std::vector;
 using std::map;
+using std::unordered_map;
 
 /**
  * Event Demutiplexer
@@ -32,7 +34,7 @@ class PollSelector : public Selector {
         virtual int Remove(int fd) override;
     private:
         vector<pollfd> _pollfds;        
-        map<int,size_t> _fd_idx_map;
+        unordered_map<int,size_t> _fd_idx_map;
 };
 
 unique_ptr<Selector> MakeDefaultSelector(EventDispatcher *evd); 

@@ -40,9 +40,11 @@ static int createAcceptSocketOrDie(InetAddr &addr)
 }
 
 static int listenOrDie(int fd) {
-    if (::listen(fd,SOMAXCONN) < 0 ) {
+    int ret = 0;
+    if ((ret = ::listen(fd,SOMAXCONN)) < 0 ) {
         LOG(FATAL) << "listenOrDie fd = " << fd;
     }
+    return ret;
 }
 
 static int acceptConnect(int sockfd, InetAddr *addr)

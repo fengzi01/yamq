@@ -37,16 +37,7 @@ TimerQueue_linked_list::~TimerQueue_linked_list()
 }
 
 void TimerQueue_linked_list::Start() {
-    if (_evd) {
-        LOG(TRACE) << "Add functor in evd !";
-        _evd->AddPendingFunctor(
-            [this]() {
-                LOG(TRACE) << "resetTimerfd IN EVD";
-                uint64_t now = Clock::GetNowTicks();
-                resetTimerfd(this->_fd,now + 1000000UL);
-            }
-        );
-    }
+    SetEvents(EV_READ);
 }
 
 
@@ -102,22 +93,26 @@ int TimerQueue_linked_list::AddTimer(uint64_t time,uint64_t interval, TimerCallb
 bool TimerQueue_linked_list::CancelTimer(int id)
 {
     Timer* node = (Timer*)_ref[id];
-    if (node != nullptr)
-    {
-        std::swap(_linked_list.back(),node);
-        _linked_list.pop_back();
-        _ref.erase(id);
-
-        std::sort(_linked_list.begin(), _linked_list.end(), 
-            [](Timer *lhs,   Timer *rhs) {
-                return  lhs->expire > rhs->expire;
-            }
-        );
-
-        _free_list.push_back(node);
-        return true;
+    if (nullptr == node) {
+        return false;
     }
-    return false;
+    if (node->expire <= _linked_list.back()->expire) {
+        // back
+        _linked_list.pop_back();
+    }
+
+    std::swap(_linked_list.back(),node);
+    _linked_list.pop_back();
+    _ref.erase(id);
+
+    std::sort(_linked_list.begin(), _linked_list.end(), 
+            [](Timer *lhs,   Timer *rhs) {
+            return  lhs->expire > rhs->expire;
+            }
+            );
+
+    _free_list.push_back(node);
+    return true;
 }
 
 int64_t TimerQueue_linked_list::WaitTimeUsec() {

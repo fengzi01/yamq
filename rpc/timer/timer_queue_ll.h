@@ -23,7 +23,7 @@ class TimerQueue_linked_list : public TimerQueueBase, public Channel {
         virtual int64_t WaitTimeUsec() override;
         virtual void OnRead() override;
 
-        void Start();
+        void Start() override;
 
 private:
     void clear();
