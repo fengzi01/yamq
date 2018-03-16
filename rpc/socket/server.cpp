@@ -40,7 +40,7 @@ void Server::createConnection(int sockfd,const InetAddr &peeraddr) {
 
     con->SetMessageCb(_message_cb);
     con->SetCloseCb(std::bind(&Server::closeConnection,this,std::placeholders::_1));
-    con->SetEvents(EV_WRITE | EV_READ);
+    con->SetEvents(EV_READ);
 
     if (_connect_cb) {
         _connect_cb(con);
@@ -58,11 +58,10 @@ void Server::removeConnection(const ConnectionPtr &con) {
     if (con->GetEvents() != EV_NONE) {
         closeConnection(con);
     }
+
     int64_t id = con->GetId();
     _ref.erase(id);
     con->Remove();
-
-    ConnectionPtr c = con;
 }
 
 void Server::Start() {
