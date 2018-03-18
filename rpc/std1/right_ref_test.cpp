@@ -47,8 +47,8 @@ int main()
  char value[] = "I love zx";
  Str s(value);
  vector<Str> vs;
- //vs.push_back(move(s));
- vs.push_back(s);
+ vs.push_back(move(s));
+ //vs.push_back(s);
  cout<<vs[0].str<<endl;
  if(s.str != NULL)
  cout<<s.str<<endl;

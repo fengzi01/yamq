@@ -26,20 +26,20 @@ class Any {
         };
 
     public:
+        // 右值引用
         template<typename value_type>
         Any(value_type &&value):
             _content(new Holder<value_type>(value)) {}
+
+        // 普通引用
         template<typename value_type>
         Any(const value_type &value):
             _content(new Holder<value_type>(value)) {}
 
+        // 复制构造函数
         Any(const Any& other):
             _content(other._content ? other._content->clone() : nullptr) {}
 
-        /* 移动构造函数 */
-        Any(Any&& other) noexcept :
-            _content(other._content ? other._content : nullptr) { other._content = nullptr;}
-        
         ~Any() { delete _content; }
 
         Any& swap(Any& rhs) {
@@ -49,6 +49,12 @@ class Any {
 
         template<typename value_type>
         Any& operator=(const value_type& rhs) {
+            Any(rhs).swap(*this);
+            return *this;
+        }
+
+        template<typename value_type>
+        Any& operator=(value_type&& rhs) {
             Any(rhs).swap(*this);
             return *this;
         }
@@ -88,12 +94,6 @@ const value_type* any_cast(const Any* any) {
 
 template<typename value_type>
 value_type any_cast(const Any& any) {
-    const value_type* result = any_cast<value_type>(&any);
-    assert(result);
-    return *result;
-}
-template<typename value_type>
-value_type any_cast(Any&& any) {
     const value_type* result = any_cast<value_type>(&any);
     assert(result);
     return *result;
