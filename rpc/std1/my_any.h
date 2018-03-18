@@ -35,6 +35,10 @@ class Any {
 
         Any(const Any& other):
             _content(other._content ? other._content->clone() : nullptr) {}
+
+        /* 移动构造函数 */
+        Any(Any&& other) noexcept :
+            _content(other._content ? other._content : nullptr) { other._content = nullptr;}
         
         ~Any() { delete _content; }
 
@@ -84,6 +88,12 @@ const value_type* any_cast(const Any* any) {
 
 template<typename value_type>
 value_type any_cast(const Any& any) {
+    const value_type* result = any_cast<value_type>(&any);
+    assert(result);
+    return *result;
+}
+template<typename value_type>
+value_type any_cast(Any&& any) {
     const value_type* result = any_cast<value_type>(&any);
     assert(result);
     return *result;
