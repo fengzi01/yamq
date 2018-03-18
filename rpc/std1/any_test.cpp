@@ -66,5 +66,7 @@ int main() {
     //std1::Any l(i);
     std1::Any m(A(10));
 
+    // test
+
     std::cout << std1::any_cast<A>(std::move(m)).GetVal() << std::endl;
 }
