@@ -63,4 +63,8 @@ int main() {
     fprintf(stderr,"==========================\n");
     //std1::Any b(10);
     fprintf(stderr,"==========================\n");
+    //std1::Any l(i);
+    std1::Any m(A(10));
+
+    std::cout << std1::any_cast<A>(std::move(m)).GetVal() << std::endl;
 }
