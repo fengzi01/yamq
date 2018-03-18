@@ -10,7 +10,7 @@ class A {
         A():_val(nullptr) {
             fprintf(stderr,"default constructor! val = %p\n",_val);
         }
-        A(int a):_val(new int(a)) {
+        explicit A(int a):_val(new int(a)) {
             fprintf(stderr,"constructor! val = %d\n",*_val);
         }
 
@@ -53,7 +53,6 @@ A GetA(int val) { return A(val); }
 
 int main() {
     A c(20); // 构造函数
-    A d = 90; // 构造函数
     A f = c; // 复制构造函数
     A e = std::move(c); // 移动构造函数
     A x,y,z;
@@ -65,8 +64,10 @@ int main() {
     fprintf(stderr,"==========================\n");
     //std1::Any l(i);
     std1::Any m(A(10));
-
     // test
-
     std::cout << std1::any_cast<A>(std::move(m)).GetVal() << std::endl;
+    A xx = A(20);
+    std1::Any n(xx);
+    // test
+    std::cout << std1::any_cast<A>(n).GetVal() << std::endl;
 }

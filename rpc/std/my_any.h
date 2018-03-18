@@ -4,10 +4,6 @@
 #include <iostream>
 #include <type_traits>
 
-/**
- * 一个不可思议的类！！！
- * 虽然我写的，但是我看不懂！！！！
- */
 namespace std1 {
 class Any {
     protected:
@@ -90,7 +86,6 @@ value_type* any_cast(Any* any) {
     if (!any) {
         std::cerr << "any is null." << std::endl;
     }
-    fprintf(stderr,"any_cast * \n");
     if (any->GetType() == typeid(value_type)) {
         return &(static_cast<Any::Holder<value_type>*>(any->_content)->_held);
     }
@@ -115,18 +110,17 @@ ValueType any_cast(Any & operand)
 template<typename value_type>
 value_type any_cast(const Any& any) {
     typedef typename std::remove_reference<value_type>::type nonref;
-    static_assert(!std::is_reference<nonref>::value,"");
     return any_cast<const nonref &>(const_cast<Any &>(any));
 }
 
 template<typename ValueType>
 inline ValueType&& any_cast(Any&& operand)
 {
-static_assert(
-			std::is_rvalue_reference<ValueType&&>::value 
-			|| std::is_const< typename std::remove_reference<ValueType>::type >::value,
-			"boost::any_cast shall not be used for getting nonconst references to temporary objects" 
-			);
+    static_assert(
+            std::is_rvalue_reference<ValueType&&>::value 
+            || std::is_const< typename std::remove_reference<ValueType>::type >::value,
+            "boost::any_cast shall not be used for getting nonconst references to temporary objects" 
+            );
 	return any_cast<ValueType&&>(operand);
 }
 } // std1
