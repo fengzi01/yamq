@@ -5,7 +5,7 @@
 #include "log/logging.h"
 #include <sys/eventfd.h>
 #include <unistd.h>
-#include "rpc/timer/timer_queue_ll.h"
+#include "rpc/timer/timer_queue_rbtree.h"
 
 static int createEventfd() {
     int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
@@ -36,7 +36,7 @@ class WakeupChannel : public Channel {
 };
 
 EventDispatcher::EventDispatcher():
-    _stop(false),_selector(MakeDefaultSelector(this)),_timer_queue(new TimerQueue_linked_list(this)) {
+    _stop(false),_selector(MakeDefaultSelector(this)),_timer_queue(new TimerQueueRbtree(this)) {
     _wakeup_fds[0] = createEventfd();
     // fd[1] is no use
     _wakeup_fds[1] = 0;

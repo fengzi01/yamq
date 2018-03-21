@@ -1,4 +1,4 @@
-#include "rpc/std1/thread.h"
+#include "rpc/std/thread.h"
 #include <utility> // std::forword
 #include <memory>
 #include <stdlib.h>
@@ -113,7 +113,7 @@ class ThreadLocalInitializer
         {
             std2::this_thread::tid = 0;
             std2::this_thread::GetTid();
-            pthread_atfork(NULL, NULL, &afterFork);
+            ::pthread_atfork(NULL, NULL, &afterFork);
         }
 };
 ThreadLocalInitializer none;//全局变量，初始化就为主线程生成线程信息 

@@ -1,7 +1,6 @@
 #include <iostream>
 #include <memory>
 
-#include "rpc/timer/timer_queue.h"
 #include "rpc/event_dispatcher.h"
 #include "rpc/selector.h"
 #include <functional>

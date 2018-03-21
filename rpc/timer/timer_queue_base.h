@@ -12,6 +12,17 @@
 // callback on timed-out
 typedef std::function<void()> TimerCallback;
 
+struct Timer
+{
+    int index = -1;
+    int id = -1;
+    uint64_t expire = 0;
+    uint64_t time = 0;
+    int64_t interval = -1; // -1 重复 0 不重复 n 重复次数
+    int64_t elapse = -1;
+    TimerCallback cb;
+};
+
 // timer queue scheduling
 class TimerQueueBase
 {
