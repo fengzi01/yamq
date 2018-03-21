@@ -2,7 +2,8 @@
 #include "timerfd.h"
 #include "log/logging.h"
 
-TimerQueueRbtree::TimerQueueRbtree(EventDispatcher *evd):_own_epoch(Clock::GetNowTicks()),_tree(rbtree_create(NULL)) {
+TimerQueueRbtree::TimerQueueRbtree(EventDispatcher *evd):_own_epoch(Clock::GetNowTicks()) {
+    _tree = ::rbtree_create(NULL);
     _fd = createTimerfd();
     _evd = evd;
 }
@@ -28,6 +29,8 @@ int TimerQueueRbtree::AddTimer(uint64_t time,uint64_t interval,TimerCallback cb)
 
     auto n = ::rbtree_insert_node(_tree,timer->expire,timer);
     _ref[id] = n;
+    LOG(TRACE) << "INSERT n.key = " << n->key;
+    LOG(TRACE) << "ADD TIMER " << timer->id << " ela = " << timer->elapse;
     timer = static_cast<Timer *>(::rbtree_min_node(_tree)->val);
     resetTimerfd(_fd,_own_epoch + timer->expire);
     return id;
@@ -50,15 +53,18 @@ void TimerQueueRbtree::PerTick() {
     Timer *timer = nullptr;
     for(;;) {
         n = ::rbtree_min_node(_tree);
+        LOG(TRACE) << "UPDATE n.key = " << n->key;
         if (n == _tree->nil) break;
         timer = static_cast<Timer *>(n->val);
-        if (timer->expire > now) {
+        LOG(TRACE) << "timer->expire = " << timer->expire << " now = " << now;
+        if (timer->expire < now) {
             expired.push_back(timer);
             ::rbtree_del_node(_tree,n);
         } else {
             break;
         }
     }
+    LOG(TRACE) << "expired.size = " << expired.size();
     for ( auto node : expired) {
         if (node->elapse > 0) {
             --(node->elapse);

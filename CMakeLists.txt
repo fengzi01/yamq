@@ -8,7 +8,7 @@ set(PROJECT_NAME "yamq")
 project(${PROJECT_NAME})
 
 set(CMAKE_C_FLAGS "-g -Wall -fPIC -pipe -lpthread -lrt")
-set(CMAKE_CXX_FLAGS "-g -Wall -fPIC -std=c++11 -pipe -lpthread -lrt")
+set(CMAKE_CXX_FLAGS "-g -Wall -fPIC -std=c++11 -pipe -lpthread -pthread -lrt")
 
 if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
     #message( FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
@@ -30,7 +30,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin")
 file(GLOB_RECURSE LOG_SOURCES "${PROJECT_SOURCE_DIR}/log/*.cpp")
 file(GLOB_RECURSE LOG_HEADERS "${PROJECT_SOURCE_DIR}/log/*.h")
 
-file(GLOB_RECURSE RPC_SOURCES "${PROJECT_SOURCE_DIR}/rpc/*.cpp")
+file(GLOB_RECURSE RPC_SOURCES "${PROJECT_SOURCE_DIR}/rpc/*.c*")
 file(GLOB_RECURSE RPC_HEADERS "${PROJECT_SOURCE_DIR}/rpc/*.h")
 
 file(GLOB_RECURSE DI_SOURCES "${PROJECT_SOURCE_DIR}/di/*.cpp")

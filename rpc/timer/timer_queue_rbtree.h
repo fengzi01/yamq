@@ -22,6 +22,5 @@ class TimerQueueRbtree : public TimerQueueBase,public Channel {
     private:
         rbtree_t *_tree;
         const uint64_t _own_epoch;
-        EventDispatcher * _evd;
 };
 

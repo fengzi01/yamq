@@ -178,7 +178,7 @@ static void _rbtree_insert_node(rbtree_t *tree,rbtree_node_t *n) {
         } else if (n->key > x->key) {
             x = x->right;
         } else  {
-            printf("key is exist!\n");
+           // printf("key is exist!\n");
             return;
         }
     }
@@ -186,7 +186,7 @@ static void _rbtree_insert_node(rbtree_t *tree,rbtree_node_t *n) {
     if (p == tree->nil) {
         // empty
         tree->root = n;
-        printf("insert node is root\n");
+        //printf("insert node is root\n");
         //        return;
     } else {
         if (n->key < p->key) {
@@ -235,7 +235,7 @@ rbtree_node_t * rbtree_min_node(rbtree_t *t) {
         x = x->left;
         ++i;
     }
-    printf("len = %d\n",i);
+    //printf("min len = %d key = %lu\n",i,min->key);
     return min;
 }
 
@@ -248,7 +248,7 @@ rbtree_node_t *rbtree_max_node(rbtree_t *t) {
         x = x->right;
         ++i;
     }
-    printf("len = %d\n",i);
+    //printf("max len = %d\n",i);
 
     return max;
 }
@@ -346,8 +346,12 @@ void rbtree_del_node(rbtree_t *t,rbtree_node_t *z) {
             y = y->left;
         }
         // 用y代替z删除
+        void *val = z->val;
+        long long key = z->key;
         z->val = y->val;
         z->key = y->key;
+        y->val = val;
+        y->key = key;
     } else {
         y = z;
     }
@@ -378,5 +382,6 @@ void rbtree_del_node(rbtree_t *t,rbtree_node_t *z) {
     if (y->col == RBTREE_COL_BLACK) {
         rbtree_del_fixup(t,x);
     }
+    fprintf(stderr,"del node key = %lu\n",y->key);
     free(y);
 }

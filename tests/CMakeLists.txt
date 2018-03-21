@@ -11,7 +11,7 @@ include_directories(${GTEST_INCLUDE_DIR})
 file(GLOB LOG_UNITTESTS "log*_unittest.cpp")
 foreach(LOG_UT ${LOG_UNITTESTS})
     get_filename_component(LOG_UT_WE ${LOG_UT} NAME_WE)
-    #MESSAGE(STATUS "ADD_TEST:" ${LOG_UT_WE})
+    MESSAGE(STATUS "ADD_TEST:" ${LOG_UT_WE})
     add_executable(${LOG_UT_WE} ${LOG_UT} $<TARGET_OBJECTS:log_objects>)
     ## gtest
     target_link_libraries(${LOG_UT_WE} gtest gtest_main)
