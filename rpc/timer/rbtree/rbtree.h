@@ -48,19 +48,18 @@ struct _rbtree_t {
 rbtree_t *rbtree_create(void *);
 void rbtree_destroy(rbtree_t *tree);
 
+//static void _rbtree_insert_node(rbtree_t *tree,rbtree_node_t *n);
 //static void left_rotate(rbtree_t *tree,rbtree_node_t *x);
 //static void right_rotate(rbtree_t *tree,rbtree_node_t *x); 
 
-//static void _rbtree_insert_node(rbtree_t *tree,rbtree_node_t *n);
-rbtree_node_t * rbtree_insert_node(rbtree_t *tree,long long key,void *data);
+rbtree_node_t * rbtree_insert(rbtree_t *tree,long long key,void *data);
+void rbtree_delete(rbtree_t *tree,rbtree_node_t *n);
+//void rbtree_del_node(rbtree_t *tree);
 
-void rbtree_del_node(rbtree_t *tree,rbtree_node_t *n);
+rbtree_node_t *rbtree_min(rbtree_t *tree);
+rbtree_node_t *rbtree_max(rbtree_t *tree);
 
-rbtree_node_t *rbtree_min_node(rbtree_t *tree);
-rbtree_node_t *rbtree_max_node(rbtree_t *tree);
-
-//rbtree_node_t *rbtree_find_node(rbtree_t *tree,long long key);
-rbtree_node_t *rbtree_successor_node(rbtree_t *tree,rbtree_node_t *n);
+rbtree_node_t *rbtree_successor(rbtree_t *tree,rbtree_node_t *n);
 
 #ifdef __cplusplus
 }

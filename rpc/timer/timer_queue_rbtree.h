@@ -20,6 +20,7 @@ class TimerQueueRbtree : public TimerQueueBase,public Channel {
 
         virtual void HandleRead() override;
     private:
+        void addTimer(Timer *timer);
         rbtree_t *_tree;
         const uint64_t _own_epoch;
 };

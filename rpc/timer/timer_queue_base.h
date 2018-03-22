@@ -21,6 +21,7 @@ struct Timer
     int64_t interval = -1; // -1 重复 0 不重复 n 重复次数
     int64_t elapse = -1;
     TimerCallback cb;
+    void *attach;
 };
 
 // timer queue scheduling

@@ -4,76 +4,87 @@
 
 TimerQueueRbtree::TimerQueueRbtree(EventDispatcher *evd):_own_epoch(Clock::GetNowTicks()) {
     _tree = ::rbtree_create(NULL);
-    _fd = createTimerfd();
+    _fd = ::createTimerfd();
     _evd = evd;
 }
 
 TimerQueueRbtree::~TimerQueueRbtree() {
-    rbtree_destroy(_tree);
-    closeTimerfd(_fd);
+    ::rbtree_destroy(_tree);
+    ::closeTimerfd(_fd);
 }
 
 int TimerQueueRbtree::AddTimer(uint64_t time,uint64_t interval,TimerCallback cb) {
-    uint64_t now = Clock::GetNowTicks();
-    uint64_t expire = now - _own_epoch + time;
     Timer *timer = new Timer();
     
-    int id = nextId();
-    timer->id = id;
-    timer->expire = expire;
+    timer->id = -1;
     timer->cb = cb;
     timer->index = -1;
     timer->elapse = interval;
     timer->interval = interval;
     timer->time = time;
+    timer->attach = nullptr;
 
-    auto n = ::rbtree_insert_node(_tree,timer->expire,timer);
-    _ref[id] = n;
-    LOG(TRACE) << "INSERT n.key = " << n->key;
-    LOG(TRACE) << "ADD TIMER " << timer->id << " ela = " << timer->elapse;
-    timer = static_cast<Timer *>(::rbtree_min_node(_tree)->val);
-    resetTimerfd(_fd,_own_epoch + timer->expire);
-    return id;
+    addTimer(timer);
+    return timer->id;
+}
+
+void TimerQueueRbtree::addTimer(Timer *timer) {
+    uint64_t now = Clock::GetNowTicks() - _own_epoch;
+    timer->expire = now + timer->time;
+    if (timer->id < 0) {
+        timer->id = nextId();
+        _ref[timer->id] = timer;
+    }
+    auto n = ::rbtree_insert(_tree,timer->expire,timer);
+    timer->attach = n;
+    if (::rbtree_min(_tree)->key >= timer->expire) {
+        ::resetTimerfd(_fd,_own_epoch + timer->expire);
+    } else {
+        // FIXME
+    }
 }
 
 bool TimerQueueRbtree::CancelTimer(int id) {
-    rbtree_node_t *n = static_cast<rbtree_node_t *>(_ref[id]);
-    if (nullptr == n) {
+    auto timer = static_cast<Timer *>(_ref[id]);
+    if (nullptr == timer) {
         return false;
     }
-    ::rbtree_del_node(_tree,n);
-    Timer *timer = static_cast<Timer *>(n->val);
+    auto n = static_cast<rbtree_node_t *>(timer->attach);
+    if (n != nullptr) {
+        ::rbtree_delete(_tree,n);
+    }
+    delete timer;
     return true;
 }
 
 void TimerQueueRbtree::PerTick() {
     uint64_t now = Clock::GetNowTicks() - _own_epoch;
-    std::vector<Timer *> expired;
+    std::vector<Timer *> expired_timers;
     rbtree_node_t *n = nullptr;
     Timer *timer = nullptr;
     for(;;) {
-        n = ::rbtree_min_node(_tree);
-        LOG(TRACE) << "UPDATE n.key = " << n->key;
+        n = ::rbtree_min(_tree);
         if (n == _tree->nil) break;
         timer = static_cast<Timer *>(n->val);
-        LOG(TRACE) << "timer->expire = " << timer->expire << " now = " << now;
         if (timer->expire < now) {
-            expired.push_back(timer);
-            ::rbtree_del_node(_tree,n);
+            expired_timers.push_back(timer);
+            ::rbtree_delete(_tree,n);
+            timer->attach = nullptr;
         } else {
             break;
         }
     }
-    LOG(TRACE) << "expired.size = " << expired.size();
-    for ( auto node : expired) {
+    for ( Timer *node : expired_timers) {
         if (node->elapse > 0) {
             --(node->elapse);
             node->cb();
-        }
-        if (node->elapse > 0) {
-            // FIXME
-            LOG(TRACE) << "ADD TIMER " << node->id << " ela = " << node->elapse;
-            //AddTimer(node->time,node->elapse,node->cb);
+            if (node->elapse > 0) {
+                addTimer(node);
+            } else {
+                delete node;
+            }
+        } else {
+            delete node;
         }
     }
 }
@@ -81,7 +92,7 @@ void TimerQueueRbtree::PerTick() {
 int64_t TimerQueueRbtree::WaitTimeUsec() {
     rbtree_node_t *n = nullptr;
     Timer *timer = nullptr;
-    n = ::rbtree_min_node(_tree);
+    n = ::rbtree_min(_tree);
     if (n == _tree->nil) return -1;
     timer = static_cast<Timer *>(n->val);
     return timer->expire;
@@ -89,11 +100,11 @@ int64_t TimerQueueRbtree::WaitTimeUsec() {
 
 void TimerQueueRbtree::HandleRead() {
     uint64_t  now = Clock::GetNowTicks();
-    readTimerfd(_fd,now); 
+    ::readTimerfd(_fd,now); 
     PerTick();
     int64_t expire = WaitTimeUsec();
     if (expire > 0) {
-        resetTimerfd(_fd,_own_epoch + expire);
+        ::resetTimerfd(_fd,_own_epoch + expire);
     } else {
         // FIXME
         LOG(TRACE) << "NO TIMER!";
