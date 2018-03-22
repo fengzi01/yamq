@@ -73,7 +73,7 @@ void TimerQueueRbtree::PerTick() {
         if (node->elapse > 0) {
             // FIXME
             LOG(TRACE) << "ADD TIMER " << node->id << " ela = " << node->elapse;
-            AddTimer(node->time,node->elapse,node->cb);
+            //AddTimer(node->time,node->elapse,node->cb);
         }
     }
 }
@@ -87,7 +87,7 @@ int64_t TimerQueueRbtree::WaitTimeUsec() {
     return timer->expire;
 }
 
-void TimerQueueRbtree::OnRead() {
+void TimerQueueRbtree::HandleRead() {
     uint64_t  now = Clock::GetNowTicks();
     readTimerfd(_fd,now); 
     PerTick();
@@ -96,6 +96,7 @@ void TimerQueueRbtree::OnRead() {
         resetTimerfd(_fd,_own_epoch + expire);
     } else {
         // FIXME
+        LOG(TRACE) << "NO TIMER!";
     }
 }
 

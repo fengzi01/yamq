@@ -25,7 +25,7 @@ class WakeupChannel : public Channel {
         WakeupChannel(EventDispatcher *evd,int fd) : Channel(evd,fd) {
         }
 
-        virtual void OnRead() {
+        virtual void HandleRead() {
             uint64_t one = 1;
             ssize_t n = ::read(_fd, &one, sizeof one);
             LOG(TRACE) << " >>> eventfd READ! <<< ";

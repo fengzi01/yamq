@@ -112,7 +112,7 @@ void Acceptor::Listen() {
    _listening = true;
 }
 
-void Acceptor::OnRead() { 
+void Acceptor::HandleRead() { 
     InetAddr peeraddr = {_inet_addr.ip_type};
     int newfd = acceptConnect(_fd,&peeraddr);
     if (_conn_cb) {

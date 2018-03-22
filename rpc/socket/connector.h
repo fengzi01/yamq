@@ -9,8 +9,8 @@ class Connector : public Channel {
         ~Connector();
 
         void Connect();
-        virtual void OnWrite() override;
-        virtual void OnRead() override;
+        virtual void HandleWrite() override;
+        virtual void HandleRead() override;
     private:
         const InetAddr _remote_addr; 
         ConnectionCallback _conn_cb;

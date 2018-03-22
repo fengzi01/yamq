@@ -23,10 +23,10 @@ class Channel {
         Channel() {}
         virtual void HandleEvent(Event &);
         
-        virtual void OnRead() {}
-        virtual void OnWrite() {}
-        virtual void OnClose() {}
-        virtual void OnError() {}
+        virtual void HandleRead() {}
+        virtual void HandleWrite() {}
+        virtual void HandleClose() {}
+        virtual void HandleError() {}
 
         void Update();
         void Remove();

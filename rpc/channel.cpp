@@ -8,13 +8,13 @@ void Channel::HandleEvent(Event &ev) {
         return;
     }
     if ( ev.revents & EV_READ) {
-        OnRead();
+        HandleRead();
     }
     if (ev.revents & EV_WRITE) {
-        OnWrite();
+        HandleWrite();
     }
     if (ev.revents & EV_ERROR) {
-        OnError();
+        HandleError();
     }
 } 
 

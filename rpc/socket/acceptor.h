@@ -10,7 +10,7 @@ class Acceptor : public Channel {
         Acceptor(EventDispatcher *evd,const InetAddr &addr);
         ~Acceptor();
 
-        virtual void OnRead() override;
+        virtual void HandleRead() override;
 
         void Listen();
         void SetConnectionCb(ConnectionCallback cb) { _conn_cb = cb;}

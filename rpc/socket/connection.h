@@ -19,8 +19,8 @@ class Connection : public Channel, public std::enable_shared_from_this<Connectio
         //void SetConnectCb(ConnectCallback cb) {_connect_cb = cb;}
         void SetCloseCb(CloseCallback cb) {_close_cb = cb;}
 
-        virtual void OnRead() override;
-        virtual void OnWrite() override;
+        virtual void HandleRead() override;
+        virtual void HandleWrite() override;
         
         void Send(const char *data,size_t len);
 

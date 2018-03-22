@@ -21,7 +21,7 @@ class TimerQueue_linked_list : public TimerQueueBase, public Channel {
         void PerTick() override;
         int Size() const override { return -1; }
         virtual int64_t WaitTimeUsec() override;
-        virtual void OnRead() override;
+        virtual void HandleRead() override;
 
         void Start() override;
 

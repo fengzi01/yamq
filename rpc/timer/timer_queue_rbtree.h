@@ -18,7 +18,7 @@ class TimerQueueRbtree : public TimerQueueBase,public Channel {
 
         void Start() override;
 
-        virtual void OnRead() override;
+        virtual void HandleRead() override;
     private:
         rbtree_t *_tree;
         const uint64_t _own_epoch;

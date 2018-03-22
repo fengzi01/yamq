@@ -159,7 +159,7 @@ void TimerQueue_linked_list::PerTick()
     }
 }
 
-void TimerQueue_linked_list::OnRead() {
+void TimerQueue_linked_list::HandleRead() {
     LOG(TRACE) << "_LINK_LIST " << _linked_list.size();
     LOG(TRACE) << _linked_list.back()->id;
     uint64_t now = Clock::GetNowTicks();

@@ -9,7 +9,7 @@ Connection::Connection(int64_t id,EventDispatcher *evd,int fd,const InetAddr &lo
     _evd = evd;
 }
 
-void Connection::OnRead() {
+void Connection::HandleRead() {
     char buf[1000];
     int n = ::read(_fd, buf, 1000);
     if ( 0 == n ) {
@@ -23,6 +23,6 @@ void Connection::OnRead() {
     }
 }
 
-void Connection::OnWrite() {
+void Connection::HandleWrite() {
     LOG(TRACE) << "Connection: fd = " << _fd << " is writeable";
 }

@@ -34,7 +34,7 @@ void OnMessage(ConnectionPtr con,char *buff,int len) {
     //con->Send(buf,len);
 }
 
-void OnClose(ConnectionPtr con) {
+void HandleClose(ConnectionPtr con) {
     InetAddr addr = con->GetRemoteSide();
     int fd = con->Getfd();
     char buf[1024];
@@ -56,7 +56,7 @@ int main(int argc,char *argv[])
     Server server(addr);
     server.SetConnectCb(OnConnection);
     server.SetMessageCb(OnMessage);
-    server.SetCloseCb(OnClose);
+    server.SetCloseCb(HandleClose);
     server.Start();
 
     yamq::shutdownLogging();
