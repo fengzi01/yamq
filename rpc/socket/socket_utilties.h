@@ -32,5 +32,5 @@ struct InetAddr {
     } ip_addr;
 };
 
-using ConnectionCallback = std::function<void(int fd,const InetAddr &)>;
+using ConnectCallback = std::function<void(int fd,const InetAddr &)>;
 

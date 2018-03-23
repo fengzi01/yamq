@@ -13,5 +13,5 @@ class Connector : public Channel {
         virtual void HandleRead() override;
     private:
         const InetAddr _remote_addr; 
-        ConnectionCallback _conn_cb;
+        ConnectCallback _conn_cb;
 };

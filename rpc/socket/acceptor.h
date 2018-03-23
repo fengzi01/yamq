@@ -13,10 +13,10 @@ class Acceptor : public Channel {
         virtual void HandleRead() override;
 
         void Listen();
-        void SetConnectionCb(ConnectionCallback cb) { _conn_cb = cb;}
+        void SetConnectCb(ConnectCallback cb) { _conn_cb = cb;}
         const InetAddr & GetInetAddr() const {return _inet_addr;} 
     private:
         bool _listening;
-        ConnectionCallback _conn_cb;
+        ConnectCallback _conn_cb;
         InetAddr _inet_addr;
 };

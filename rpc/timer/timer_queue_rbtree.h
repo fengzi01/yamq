@@ -14,9 +14,12 @@ class TimerQueueRbtree : public TimerQueueBase,public Channel {
         int AddTimer(uint64_t time,uint64_t interval,TimerCallback cb) override;
         // thread safe
         void CancelTimer(int id) override;
+        // run in loop thread
         void PerTick() override;
-        int Size() const override { return -1; }
         virtual int64_t WaitTimeUsec() const override;
+
+        int Size() const override { return -1; }
+
 //        void Start() override;
         virtual void HandleRead() override;
     private:
