@@ -7,6 +7,7 @@ class Connection;
 class Acceptor : public Channel {
     // 用胶水functor来做吧！
     public:
+        using NewConnectCallback = std::function<void (int fd,InetAddr peer_addr);
         Acceptor(EventDispatcher *evd,const InetAddr &addr);
         ~Acceptor();
 

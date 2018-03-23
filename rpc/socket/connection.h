@@ -7,6 +7,7 @@
 
 class Connection;
 typedef std::shared_ptr<Connection> ConnectionPtr;
+
 using ConnectCallback = std::function<void (const ConnectionPtr &)>;
 //using MessageCallback = std::function<void (Connection *,IoBuffer *)>;
 using MessageCallback = std::function<void (const ConnectionPtr &,char *buf,int len)>;
