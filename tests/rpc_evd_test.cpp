@@ -15,7 +15,7 @@ int main(int argc,char *argv[])
     evd.AddTimer(1000,2,[](){printf("timer 1 cb. now = %s \n",Clock::CurrentTimeString(Clock::CurrentTimeMillis()).c_str());});
     evd.AddTimer(2000,2,[](){printf("timer 2 cb. now = %s \n",Clock::CurrentTimeString(Clock::CurrentTimeMillis()).c_str());});
     evd.AddTimer(3000,2,[](){printf("timer 3 cb. now = %s \n",Clock::CurrentTimeString(Clock::CurrentTimeMillis()).c_str());});
-    evd.Run();
+    evd.Start();
     yamq::shutdownLogging();
     return 0;
 }

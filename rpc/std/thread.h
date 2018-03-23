@@ -44,7 +44,7 @@ namespace this_thread {
 
     static_assert(std::is_same<int,pid_t>::value,"pid_t must is same as int!");
     int GetTid();
-    const char *GetTid_str() { return tid_str; }
-    int GetTid_strlen() { return tid_strlen; }
+    const char *GetTid_str();
+    int GetTid_strlen(); 
 }
 }

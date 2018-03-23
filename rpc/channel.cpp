@@ -21,6 +21,7 @@ void Channel::HandleEvent(Event &ev) {
 void Channel::Remove() {
     _evd->RemoveChannel(this);
 }
+
 void Channel::Update() {
     if (_attached) {
         _evd->UpdateChannel(this);
@@ -30,3 +31,6 @@ void Channel::Update() {
     }
 }
 
+EventDispatcher *Channel::GetEvd() { 
+    return _evd;
+}

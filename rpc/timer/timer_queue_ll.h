@@ -17,13 +17,13 @@ class TimerQueue_linked_list : public TimerQueueBase, public Channel {
         virtual ~TimerQueue_linked_list();
 
         int AddTimer(uint64_t time,uint64_t interval,TimerCallback cb) override;
-        bool CancelTimer(int id) override;
+        void CancelTimer(int id) override;
         void PerTick() override;
         int Size() const override { return -1; }
-        virtual int64_t WaitTimeUsec() override;
+        virtual int64_t WaitTimeUsec() const override;
         virtual void HandleRead() override;
 
-        void Start() override;
+//        void Start() override;
 
 private:
     void clear();

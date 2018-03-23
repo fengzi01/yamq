@@ -1,13 +1,13 @@
 #include "rpc/event_dispatcher.h"
 #include "rpc/selector.h"
 #include "rpc/channel.h"
-#include "assert.h"
 #include "log/logging.h"
+#include "rpc/timer/timer_queue_rbtree.h"
+#include "rpc/epoll_selector.h"
+#include "rpc/std/thread.h"
 #include <sys/eventfd.h>
 #include <unistd.h>
-#include "rpc/timer/timer_queue_rbtree.h"
-#include "rpc/timer/timer_queue_ll.h"
-#include "rpc/epoll_selector.h"
+#include <assert.h>
 
 static int createEventfd() {
     int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
@@ -19,43 +19,47 @@ static int createEventfd() {
     LOG(TRACE) << "create eventfd = " << evtfd;
     return evtfd;
 }
+static int destroyEventfd(int fd) {
+    ::close(fd);
+}
 
 class WakeupChannel : public Channel {
     public:
-        WakeupChannel(EventDispatcher *evd,int fd) : Channel(evd,fd) {
+        WakeupChannel(EventDispatcher *evd) : Channel() {
+            _fd = ::createEventfd();
+            _evd = evd;
         }
-
+        ~WakeupChannel() {
+            ::destroyEventfd(_fd);
+        }
         virtual void HandleRead() {
             uint64_t one = 1;
             ssize_t n = ::read(_fd, &one, sizeof one);
-            LOG(TRACE) << " >>> eventfd READ! <<< ";
-            if (n != sizeof one)
-            {
-                LOG(ERROR) << "EventLoop::handleRead() reads " << n << " bytes instead of 8";
+            if (n != sizeof one) {
+                LOG(ERROR) << "wakeup_channel reads " << n << " bytes instead of 8";
+                exit(0);
             }
-            exit(0);
         }
 };
 
 EventDispatcher::EventDispatcher():
-    //_stop(false),_selector(MakeDefaultSelector(this)),_timer_queue(new TimerQueue_linked_list(this)) {
-    _stop(false),_selector(new EpollSelector(this)),_timer_queue(new TimerQueueRbtree(this)) {
-    _wakeup_fds[0] = createEventfd();
-    // fd[1] is no use
+    _stop(false),
+    _selector(new EpollSelector(this)),
+    _timer_queue(new TimerQueueRbtree(this)),
+    _wakeup_channel(new WakeupChannel(this)),
+    _thread_id(std2::this_thread::GetTid())
+{
     _wakeup_fds[1] = 0;
-    _wakeup_channel.reset(new WakeupChannel(this,_wakeup_fds[0]));
-
-    //_wakeup_channel->SetEvents(EV_READ);
-    //_timer_queue->SetEvents(EV_READ);
+    _wakeup_fds[1] = _wakeup_channel->Getfd();
 }
 
 EventDispatcher::~EventDispatcher() {
     Stop();
 }
 
-void EventDispatcher::Run() {
+void EventDispatcher::Start() {
     _wakeup_channel->SetEvents(EV_READ);
-    _timer_queue->Start();
+    _timer_queue->SetEvents(EV_READ);
     vector<Event> events;
     // loop
     for(;;) {
@@ -129,12 +133,11 @@ void EventDispatcher::Wakeup() {
 }
 
 // TODO call AddPendingFunctor in Functor ?
-void EventDispatcher::AddPendingFunctor(Functor &&cb) {
+void EventDispatcher::addPendingFunctor(const Functor &cb) {
     {
         std::lock_guard<std::mutex> guard(_mutex);
-        _pending_functors.push_back(std::ref(cb));
+        _pending_functors.push_back(cb);
     }
-    Wakeup();
 }
 
 void EventDispatcher::runPendingFunctor() {
@@ -158,6 +161,19 @@ int EventDispatcher::AddTimer(int64_t time_ms,int interval,Functor cb) {
 // Never call in another thread!
 void EventDispatcher::CancelTimer(int timer_id) {
     _timer_queue->CancelTimer(timer_id);
+}
+
+bool EventDispatcher::isInLoopThread() const {
+    return _thread_id == std2::this_thread::GetTid();
+}
+
+void EventDispatcher::RunInLoop(const Functor &cb) {
+    if (isInLoopThread()) {
+        cb();
+    } else {
+        addPendingFunctor(cb);
+        Wakeup();
+    }
 }
 
 

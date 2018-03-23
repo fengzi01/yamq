@@ -10,17 +10,18 @@ class TimerQueueRbtree : public TimerQueueBase,public Channel {
         TimerQueueRbtree(EventDispatcher *evd);
         virtual ~TimerQueueRbtree();
 
+        // thread safe
         int AddTimer(uint64_t time,uint64_t interval,TimerCallback cb) override;
-        bool CancelTimer(int id) override;
+        // thread safe
+        void CancelTimer(int id) override;
         void PerTick() override;
         int Size() const override { return -1; }
-        virtual int64_t WaitTimeUsec() override;
-
-        void Start() override;
-
+        virtual int64_t WaitTimeUsec() const override;
+//        void Start() override;
         virtual void HandleRead() override;
     private:
         void addTimer(Timer *timer);
+        bool cancelTimer(int timer_id);
         rbtree_t *_tree;
         const uint64_t _own_epoch;
 };

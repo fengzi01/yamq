@@ -67,7 +67,7 @@ void Server::removeConnection(const ConnectionPtr &con) {
 void Server::Start() {
     _acceptor->Listen();
     _acceptor->SetEvents(EV_READ);
-    _evd->Run();
+    _evd->Start();
 }
 
 

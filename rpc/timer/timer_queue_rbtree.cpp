@@ -1,6 +1,8 @@
 #include "rpc/timer/timer_queue_rbtree.h"
 #include "timerfd.h"
 #include "log/logging.h"
+#include "rpc/event_dispatcher.h"
+#include <functional>
 
 TimerQueueRbtree::TimerQueueRbtree(EventDispatcher *evd):_own_epoch(Clock::GetNowTicks()) {
     _tree = ::rbtree_create(NULL);
@@ -16,7 +18,7 @@ TimerQueueRbtree::~TimerQueueRbtree() {
 int TimerQueueRbtree::AddTimer(uint64_t time,uint64_t interval,TimerCallback cb) {
     Timer *timer = new Timer();
     
-    timer->id = -1;
+    //timer->id = -1;
     timer->cb = cb;
     timer->index = -1;
     timer->elapse = interval;
@@ -24,17 +26,17 @@ int TimerQueueRbtree::AddTimer(uint64_t time,uint64_t interval,TimerCallback cb)
     timer->time = time;
     timer->attach = nullptr;
 
-    addTimer(timer);
+    timer->id = nextId();
+    _ref[timer->id] = timer;
+
+    // 保证在Loop线程中更新
+    _evd->RunInLoop(std::bind(&TimerQueueRbtree::addTimer,this,timer));
     return timer->id;
 }
 
 void TimerQueueRbtree::addTimer(Timer *timer) {
     uint64_t now = Clock::GetNowTicks() - _own_epoch;
     timer->expire = now + timer->time;
-    if (timer->id < 0) {
-        timer->id = nextId();
-        _ref[timer->id] = timer;
-    }
     auto n = ::rbtree_insert(_tree,timer->expire,timer);
     timer->attach = n;
     if (::rbtree_min(_tree)->key >= timer->expire) {
@@ -44,7 +46,12 @@ void TimerQueueRbtree::addTimer(Timer *timer) {
     }
 }
 
-bool TimerQueueRbtree::CancelTimer(int id) {
+void TimerQueueRbtree::CancelTimer(int timer_id) {
+    // 保证在Loop线程中更新
+    _evd->RunInLoop(std::bind(&TimerQueueRbtree::cancelTimer,this,timer_id));  
+}
+
+bool TimerQueueRbtree::cancelTimer(int id) {
     auto timer = static_cast<Timer *>(_ref[id]);
     if (nullptr == timer) {
         return false;
@@ -89,7 +96,7 @@ void TimerQueueRbtree::PerTick() {
     }
 }
 
-int64_t TimerQueueRbtree::WaitTimeUsec() {
+int64_t TimerQueueRbtree::WaitTimeUsec() const {
     rbtree_node_t *n = nullptr;
     Timer *timer = nullptr;
     n = ::rbtree_min(_tree);
@@ -109,9 +116,5 @@ void TimerQueueRbtree::HandleRead() {
         // FIXME
         LOG(TRACE) << "NO TIMER!";
     }
-}
-
-void TimerQueueRbtree::Start() {
-    SetEvents(EV_READ);
 }
 

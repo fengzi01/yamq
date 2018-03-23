@@ -25,11 +25,6 @@ TimerQueue_linked_list::~TimerQueue_linked_list()
     closeTimerfd(_fd);
 }
 
-void TimerQueue_linked_list::Start() {
-    SetEvents(EV_READ);
-}
-
-
 void TimerQueue_linked_list::clear()
 {
     _linked_list.clear();
@@ -81,11 +76,11 @@ int TimerQueue_linked_list::AddTimer(uint64_t time,uint64_t interval, TimerCallb
     return id;
 }
 
-bool TimerQueue_linked_list::CancelTimer(int id)
+void TimerQueue_linked_list::CancelTimer(int id)
 {
     Timer* node = (Timer*)_ref[id];
     if (nullptr == node) {
-        return false;
+        return;
     }
 
     if (node->expire <= _linked_list.back()->expire) {
@@ -104,10 +99,9 @@ bool TimerQueue_linked_list::CancelTimer(int id)
     );
 
     _free_list.push_back(node);
-    return true;
 }
 
-int64_t TimerQueue_linked_list::WaitTimeUsec() {
+int64_t TimerQueue_linked_list::WaitTimeUsec() const {
     LOG(TRACE) << "_linked_list.empty() " << _linked_list.empty() << " size = " << _linked_list.size();
     LOG(TRACE) << "========================";
     LOG(TRACE) << "SIZE = " << _linked_list.size();

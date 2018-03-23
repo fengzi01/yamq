@@ -88,5 +88,5 @@ int main(int argc, char *argv[]) {
     channel.SetEvents(EV_WRITE);
     pChannel->SetEvents(EV_WRITE);
 
-    evd.Run();
+    evd.Start();
 }

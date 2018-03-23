@@ -3,6 +3,7 @@
 #include <memory>
 #include <stdlib.h>
 #include <sys/syscall.h>
+#include <stdio.h>
 
 namespace std2 {
 
@@ -98,6 +99,8 @@ namespace this_thread {
         }
         return tid;
     }
+    const char *GetTid_str() { return tid_str; }
+    int GetTid_strlen() { return tid_strlen; }
 }
 
 namespace {

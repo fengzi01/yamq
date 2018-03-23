@@ -35,7 +35,7 @@ int main(int argc,char *argv[])
     acceptor.Listen();
     LOG(TRACE) << "acceptor";
 
-    evd.Run();
+    evd.Start();
     //yamq::shutdownLogging();
     return 0;
 }

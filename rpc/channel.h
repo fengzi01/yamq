@@ -39,7 +39,7 @@ class Channel {
         bool Attached() {return _attached;}
 
         /* event dispatcher expose, beause maybe use AddTimer or etc. */
-        EventDispatcher * GetEvd() {return _evd;}
+        EventDispatcher *GetEvd();
     protected:
         int _fd;
         int _events;

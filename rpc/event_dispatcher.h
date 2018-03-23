@@ -4,19 +4,19 @@
 #include <unordered_map>
 #include <vector>
 #include <mutex>
-#include "rpc/channel.h"
-#include "rpc/timer/timer_queue_base.h"
 #include <atomic>
 
 using std::unique_ptr;
 class Selector;
+class TimerQueueRbtree;
+class Channel;
 
 class EventDispatcher {
     public:
         typedef std::function<void()> Functor;
         EventDispatcher();
         ~EventDispatcher();
-        void Run();
+        void Start();
         void Stop(); 
 
         // Never call in another thread!
@@ -24,27 +24,31 @@ class EventDispatcher {
         int UpdateChannel(Channel *);
         int RemoveChannel(Channel *);
 
-        void AddPendingFunctor(Functor &&cb);
-        void Wakeup();
-
-        // Never call in another thread!
         int AddTimer(int64_t time_ms,int interval,Functor cb);
         void CancelTimer(int timer_id);
+
+        void Wakeup();
+        void RunInLoop(const Functor &cb); 
     private:
         Channel* findChannel(int fd);
         void runPendingFunctor();
+        void addPendingFunctor(const Functor &cb);
+
+        bool isInLoopThread() const;
+
         std::atomic<bool> _stop;
         unique_ptr<Selector> _selector;  // for virtual function
         std::unordered_map<int,Channel *> _ref;
 
-        std::mutex _mutex;
-        std::vector<Functor> _pending_functors;
-
+        unique_ptr<TimerQueueRbtree> _timer_queue;
         // FIXME or pipe ? 
         int _wakeup_fds[2];
         unique_ptr<Channel> _wakeup_channel;
 
-        unique_ptr<TimerQueueBase> _timer_queue;
+        std::mutex _mutex;
+        std::vector<Functor> _pending_functors;
+
+        const int _thread_id;
 };
 
 #endif

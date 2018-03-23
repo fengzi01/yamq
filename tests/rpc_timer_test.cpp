@@ -21,7 +21,7 @@ int main(int argc,char *argv[])
     queue = new TimerQueue_linked_list(&evd);
     queue->AddTimer(1000000,10,TimerHandler);
 //    queue->Start();
-    evd.Run();
+    evd.Start();
     delete queue;
     yamq::shutdownLogging();
     return 0;

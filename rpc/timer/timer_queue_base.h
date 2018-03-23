@@ -39,16 +39,16 @@ public:
     virtual int AddTimer(uint64_t time,uint64_t interval,TimerCallback cb) = 0;
 
     // cancel a timer by id.
-    virtual bool CancelTimer(int id) = 0;
+    virtual void CancelTimer(int id) = 0;
 
     // per-tick bookkeeping.
     virtual void PerTick() = 0;
 
     virtual int Size() const = 0;
 
-    virtual int64_t WaitTimeUsec() {return 0;}
+    virtual int64_t WaitTimeUsec() const {return 0;}
 
-    virtual void Start() {}
+//    virtual void Start() {}
 
 protected:
 
