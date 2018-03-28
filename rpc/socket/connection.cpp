@@ -1,12 +1,15 @@
 #include "rpc/socket/connection.h"
 #include "log/logging.h"
 #include "unistd.h"
+#include "rpc/io_buffer.h"
 
 Connection::Connection(int64_t id,EventDispatcher *evd,int fd,const InetAddr &local_side,const InetAddr &remote_side):
     _id(id),
     _local_side(local_side),
     _remote_side(remote_side),
-    _status(CONNECTING)
+    _status(CONNECTING),
+    _input_buf(new IoBuffer()),
+    _output_buf(new IoBuffer())
 {
     _fd = fd;
     _evd = evd;

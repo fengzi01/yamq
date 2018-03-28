@@ -1,7 +1,6 @@
 #pragma once
 #include "rpc/channel.h"
 #include "rpc/socket/socket_utilties.h"
-#include "rpc/socket/connection.h"
 
 class EventDispatcher;
 class Acceptor : public Channel {

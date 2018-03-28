@@ -13,7 +13,6 @@ const int CONNECTING = 1,CONNECTED = 2,CLOSING = 3,CLOSED = 4;
 class Connection : public Channel, public std::enable_shared_from_this<Connection> {
     public:
         using ConnectCallback = std::function<void (const ConnectionPtr &)>;
-        //using MessageCallback = std::function<void (Connection *,IoBuffer *)>;
         using MessageCallback = std::function<void (const ConnectionPtr &,char *buf,int len)>;
         using CloseCallback = std::function<void (const ConnectionPtr &)>;
 
@@ -44,8 +43,8 @@ class Connection : public Channel, public std::enable_shared_from_this<Connectio
         MessageCallback _message_cb;
         CloseCallback _close_cb;
 
+        int _status;
+
         std::unique_ptr<IoBuffer> _input_buf;
         std::unique_ptr<IoBuffer> _output_buf;
-
-        int _status;
 };

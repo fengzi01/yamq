@@ -5,6 +5,9 @@
 #include <sys/uio.h>
 #include "log/logging.h"
 
+const int IoBuffer::kInitialSize;
+const int IoBuffer::kCheapPrepend;
+
 IoBuffer::IoBuffer(size_t initial_size):
     _buf(initial_size + kCheapPrepend),
     _read_index(kCheapPrepend),
@@ -19,10 +22,10 @@ void IoBuffer::wseek(int offset) {
 void IoBuffer::makeSpace(size_t n) {
     if (WriteableChars() + PrependChars() < static_cast<int>(n) + kCheapPrepend) {
         // actual need realloc memory
-        _buf.resize(_write_index+n);
+        _buf.resize(_write_index+n); // not always realloc, only when capacity isn't enough
     } else {
         // move data to release some memory
-        format();
+        format(); // FIXME not efficient
     }
 }
 
@@ -59,12 +62,6 @@ void IoBuffer::Seek(int offset) {
     }
 }
 
-void IoBuffer::Swap(IoBuffer &buf) {
-    _buf.swap(buf._buf);
-    std::swap(_read_index,buf._read_index);
-    std::swap(_write_index,buf._write_index);
-}
-
 size_t IoBuffer::Retrieve(int fd) {
     // saved an ioctl()/FIONREAD call to tell how much to read
     char extrabuf[65536];
@@ -94,8 +91,18 @@ size_t IoBuffer::Retrieve(int fd) {
     return n;
 }
 
-void IoBuffer::Shrink() {
-    IoBuffer buf(ReadableChars());
+void IoBuffer::Shrink(int reserve) {
+    IoBuffer buf;
+    reserve += ReadableChars();
+    if (buf.WriteableChars() < static_cast<int>(reserve)) {
+        buf.makeSpace(reserve);
+    }
     buf.Append(Peek(),ReadableChars());     
     Swap(buf);
+}
+
+void IoBuffer::Swap(IoBuffer &buf) {
+    _buf.swap(buf._buf);
+    std::swap(_read_index,buf._read_index);
+    std::swap(_write_index,buf._write_index);
 }

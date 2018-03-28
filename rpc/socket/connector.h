@@ -5,7 +5,7 @@
 
 class Connector : public Channel {
     public:
-        using NewConnectCallback = std::function<void (int fd);
+        using ConnectCallback = std::function<void (int fd)>;
         Connector();
         ~Connector();
 
