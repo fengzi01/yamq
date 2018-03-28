@@ -1,5 +1,6 @@
 #ifndef _IO_BUFFER_H
 #define _IO_BUFFER_H
+#include <stddef.h>
 #include <vector>
 /* io读取应用层buffer类 */
 class IoBuffer {

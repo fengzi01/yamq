@@ -7,7 +7,7 @@ include(DownloadGtest)
 include_directories(${GTEST_INCLUDE_DIR})
 
 # unittest
-## LOG
+## log
 file(GLOB LOG_UNITTESTS "log*_unittest.cpp")
 foreach(LOG_UT ${LOG_UNITTESTS})
     get_filename_component(LOG_UT_WE ${LOG_UT} NAME_WE)
@@ -24,9 +24,19 @@ foreach(LOG_TEST ${LOG_TESTS})
     add_executable(${LOG_TEST_WE} ${LOG_TEST} $<TARGET_OBJECTS:log_objects>)
 endforeach()
 
-file(GLOB RPC_TESTS "rpc*_test.cpp")
-foreach(RPC_TEST ${RPC_TESTS}) 
-    get_filename_component(RPC_TEST_WE ${RPC_TEST} NAME_WE)
-    add_executable(${RPC_TEST_WE} ${RPC_TEST} $<TARGET_OBJECTS:log_objects> $<TARGET_OBJECTS:rpc_objects>)
+## rpc
+file(GLOB UNITTESTS "rpc*_unittest.cpp")
+foreach(UT ${UNITTESTS})
+    get_filename_component(UT_NAME ${UT} NAME_WE)
+    MESSAGE(STATUS "ADD_TEST:" ${UT_NAME})
+    add_executable(${UT_NAME} ${UT} $<TARGET_OBJECTS:log_objects> $<TARGET_OBJECTS:rpc_objects>)
+    target_link_libraries(${UT_NAME} gtest gtest_main)
+    add_test(NAME ${UT_NAME} COMMAND ${UT_NAME})
+endforeach()
+
+file(GLOB TESTS "rpc*_test.cpp")
+foreach(TEST ${TESTS}) 
+    get_filename_component(TEST_NAME ${TEST} NAME_WE)
+    add_executable(${TEST_NAME} ${TEST} $<TARGET_OBJECTS:log_objects> $<TARGET_OBJECTS:rpc_objects>)
 endforeach()
 

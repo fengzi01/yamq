@@ -30,7 +30,7 @@ int main(int argc,char *argv[])
 
     Acceptor acceptor(&evd,addr);
     LOG(TRACE) << "acceptor";
-    acceptor.SetConnectionCb(onConnection);
+    acceptor.SetConnectCb(onConnection);
     acceptor.SetEvents(EV_READ);
     acceptor.Listen();
     LOG(TRACE) << "acceptor";

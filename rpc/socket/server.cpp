@@ -3,14 +3,15 @@
 #include "rpc/socket/acceptor.h"
 #include "rpc/selector.h"
 #include <arpa/inet.h>  // inet_ntop
+#include "rpc/socket/connection.h"
 
 Server::Server(EventDispatcher *evd,const InetAddr &addr):
-    _current_id(0),
+    _next_id(0),
     _evd(evd),
     _acceptor(new Acceptor(evd,addr)) 
 {
     // set acceptor ConnectionCb to Server createConnection
-    _acceptor->SetConnectionCb(
+    _acceptor->SetConnectCb(
             std::bind(&Server::newConnect,
                 this,
                 std::placeholders::_1,
@@ -20,8 +21,8 @@ Server::Server(EventDispatcher *evd,const InetAddr &addr):
 Server::~Server() {
 }
 
-int64_t Server::next_id() {
-    int64_t id = _current_id;
+int64_t Server::nextId() {
+    int64_t id = _next_id;
     for (;;) {
         if (id < 0) {
             id = 0;
@@ -32,12 +33,12 @@ int64_t Server::next_id() {
         }
         break;
     }
-    _current_id = id;
+    _next_id = id;
     return id;
 }
 
 void Server::newConnect(int sockfd,const InetAddr &peeraddr) {
-    int64_t id = next_id();
+    int64_t id = nextId();
     ConnectionPtr con = std::make_shared<Connection>(id,_evd,sockfd,_acceptor->GetInetAddr(),peeraddr);
     con->SetMessageCb(_message_cb);
     con->SetCloseCb(std::bind(&Server::closeConnect,this,std::placeholders::_1));
@@ -65,7 +66,7 @@ void Server::removeConnect(const ConnectionPtr &con) {
     // FIXME
     int64_t id = con->GetId();
     con->Remove();
-    _ref.erase(id);
+    _connections.erase(id);
     con->SetStatus(CLOSED);
 }
 

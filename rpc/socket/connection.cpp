@@ -5,12 +5,14 @@
 Connection::Connection(int64_t id,EventDispatcher *evd,int fd,const InetAddr &local_side,const InetAddr &remote_side):
     _id(id),
     _local_side(local_side),
-    _remote_side(remote_side)
+    _remote_side(remote_side),
     _status(CONNECTING)
 {
     _fd = fd;
     _evd = evd;
 }
+
+Connection::~Connection() {}
 
 void Connection::HandleRead() {
     char buf[1000];
@@ -31,8 +33,8 @@ void Connection::HandleWrite() {
 }
 
 void Connection::Write(const char *data,size_t len) {
-    _evd->RunInLoop(
-        [](){
-        }
-    );
+    //_evd->RunInLoop(
+    //    [](){
+    //    }
+    //);
 }

@@ -8,6 +8,8 @@
 class Connection;
 typedef std::shared_ptr<Connection> ConnectionPtr;
 
+const int CONNECTING = 1,CONNECTED = 2,CLOSING = 3,CLOSED = 4;
+
 class Connection : public Channel, public std::enable_shared_from_this<Connection> {
     public:
         using ConnectCallback = std::function<void (const ConnectionPtr &)>;
@@ -45,6 +47,5 @@ class Connection : public Channel, public std::enable_shared_from_this<Connectio
         std::unique_ptr<IoBuffer> _input_buf;
         std::unique_ptr<IoBuffer> _output_buf;
 
-        const int CONNECTING = 1,CONNECTED = 2,CLOSING = 3,CLOSED = 4;
         int _status;
 };
