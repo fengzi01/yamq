@@ -2,9 +2,12 @@
 #include "log/logging.h"
 #include "unistd.h"
 
-Connection::Connection(int64_t id,EventDispatcher *evd,int fd,const InetAddr &local_side,const InetAddr &remote_side):_id(id) {
-    _local_side = local_side;
-    _remote_side = remote_side;
+Connection::Connection(int64_t id,EventDispatcher *evd,int fd,const InetAddr &local_side,const InetAddr &remote_side):
+    _id(id),
+    _local_side(local_side),
+    _remote_side(remote_side)
+    _status(CONNECTING)
+{
     _fd = fd;
     _evd = evd;
 }
@@ -25,4 +28,11 @@ void Connection::HandleRead() {
 
 void Connection::HandleWrite() {
     LOG(TRACE) << "Connection: fd = " << _fd << " is writeable";
+}
+
+void Connection::Write(const char *data,size_t len) {
+    _evd->RunInLoop(
+        [](){
+        }
+    );
 }

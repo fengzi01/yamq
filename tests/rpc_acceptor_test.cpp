@@ -22,7 +22,7 @@ int main(int argc,char *argv[])
 {
     //yamq::initLogging(argv[0]);
     InetAddr addr;
-    addr.ip_type = ipv4;
+    addr.ip_type = inet_ipv4;
     addr.ip_addr.addr4.sin_family = AF_INET;
     addr.ip_addr.addr4.sin_port = htons(8080);
     addr.ip_addr.addr4.sin_addr.s_addr = INADDR_ANY;

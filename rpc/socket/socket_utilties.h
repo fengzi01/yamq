@@ -23,12 +23,14 @@
 //         struct in6_addr sin6_addr;     /* IPv6 address */
 //         uint32_t        sin6_scope_id; /* IPv6 scope-id */
 //     };
-const static short ipv4 = 1,ipv6 = 2;
+const static short inet_ipv4 = 1,inet_ipv6 = 2;
 struct InetAddr {
     short ip_type;
     union {
         struct sockaddr_in addr4;
         struct sockaddr_in6 addr6;
     } ip_addr;
+
+    static void ToAddr(const std::string &str,InetAddr &addr);
 };
 

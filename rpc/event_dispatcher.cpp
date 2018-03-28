@@ -153,12 +153,10 @@ void EventDispatcher::runPendingFunctor() {
     }
 }
 
-// Never call in another thread!
 int EventDispatcher::AddTimer(int64_t time_ms,int interval,Functor cb) {
     return _timer_queue->AddTimer(time_ms * 1000000UL,interval,cb);
 }
 
-// Never call in another thread!
 void EventDispatcher::CancelTimer(int timer_id) {
     _timer_queue->CancelTimer(timer_id);
 }

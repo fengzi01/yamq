@@ -13,7 +13,7 @@ static int createAcceptSocketOrDie(InetAddr &addr)
      * AF_INET 相比 AF_UNIX 更具通用性，因为 Windows 上有 AF_INET 而没有 AF_UNIX。
      */
     int sockfd = 0;
-    if (addr.ip_type == ipv4) {
+    if (addr.ip_type == inet_ipv4) {
         sockfd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
     } else {
         sockfd = ::socket(AF_INET6, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
@@ -26,7 +26,7 @@ static int createAcceptSocketOrDie(InetAddr &addr)
     LOG(TRACE) << "Create acceptor fd  = " << sockfd;
     // bind
     int ret = 0;
-    if (addr.ip_type == ipv4) {
+    if (addr.ip_type == inet_ipv4) {
         ret = ::bind(sockfd, (struct sockaddr *) &addr.ip_addr, sizeof(struct sockaddr));
     } else {
         ret = ::bind(sockfd, (struct sockaddr *) &addr.ip_addr, sizeof(struct sockaddr_in6));
@@ -84,7 +84,7 @@ static int acceptConnect(int sockfd, InetAddr *addr)
         }
     }
     char buf[1024];
-    if (addr->ip_type == ipv4) {
+    if (addr->ip_type == inet_ipv4) {
         fprintf(stderr,"New connection IPV4 ip = %s, port = %d, socket = %d\n",  
                 inet_ntop(AF_INET, &addr->ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
                 ntohs(addr->ip_addr.addr4.sin_port), connfd);
@@ -115,8 +115,8 @@ void Acceptor::Listen() {
 void Acceptor::HandleRead() { 
     InetAddr peeraddr = {_inet_addr.ip_type};
     int newfd = acceptConnect(_fd,&peeraddr);
-    if (_conn_cb) {
-        _conn_cb(newfd,peeraddr);
+    if (_new_conn_cb) {
+        _new_conn_cb(newfd,peeraddr);
         //_conn_cb();
     } else {
         ::close(newfd);

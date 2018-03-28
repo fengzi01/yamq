@@ -4,10 +4,14 @@
 #include "rpc/selector.h"
 #include <arpa/inet.h>  // inet_ntop
 
-Server::Server(const InetAddr &addr):_current_id(0),_evd(new EventDispatcher()),_acceptor(new Acceptor(_evd.get(),addr)) {
+Server::Server(EventDispatcher *evd,const InetAddr &addr):
+    _current_id(0),
+    _evd(evd),
+    _acceptor(new Acceptor(evd,addr)) 
+{
     // set acceptor ConnectionCb to Server createConnection
     _acceptor->SetConnectionCb(
-            std::bind(&Server::createConnection,
+            std::bind(&Server::newConnect,
                 this,
                 std::placeholders::_1,
                 std::placeholders::_2));
@@ -16,52 +20,53 @@ Server::Server(const InetAddr &addr):_current_id(0),_evd(new EventDispatcher()),
 Server::~Server() {
 }
 
-int Server::nextId() {
-    int id = _current_id;
+int64_t Server::next_id() {
+    int64_t id = _current_id;
     for (;;) {
-        if (_ref.count(id) > 0) {
-            ++id;
-        } else {
-            break;
+        if (id < 0) {
+            id = 0;
         }
+        if (_connections.count(id) > 0) {
+            ++id;
+            continue;
+        }
+        break;
     }
     _current_id = id;
     return id;
 }
 
-void Server::createConnection(int sockfd,const InetAddr &peeraddr) {
-    int64_t id = nextId();
-    //char buf[1024];
-    //fprintf(stderr,"CreateConnection IPV4 ip = %s, port = %d, socket = %d\n",  
-    //        inet_ntop(AF_INET, &peeraddr.ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
-    //            ntohs(peeraddr.ip_addr.addr6.sin6_port), sockfd);
-    ConnectionPtr con = std::make_shared<Connection>(id,_evd.get(),sockfd,_acceptor->GetInetAddr(),peeraddr);
-    _ref.insert(std::make_pair(id, con)); 
-
+void Server::newConnect(int sockfd,const InetAddr &peeraddr) {
+    int64_t id = next_id();
+    ConnectionPtr con = std::make_shared<Connection>(id,_evd,sockfd,_acceptor->GetInetAddr(),peeraddr);
     con->SetMessageCb(_message_cb);
-    con->SetCloseCb(std::bind(&Server::closeConnection,this,std::placeholders::_1));
+    con->SetCloseCb(std::bind(&Server::closeConnect,this,std::placeholders::_1));
     con->SetEvents(EV_READ);
+
+    _connections[id] = con;
 
     if (_connect_cb) {
         _connect_cb(con);
     }
+    con->SetStatus(CONNECTED);
 }
 
-void Server::closeConnection(const ConnectionPtr &con) {
+void Server::closeConnect(const ConnectionPtr &con) {
+    // FIXME
     con->SetEvents(EV_NONE);
+    con->SetStatus(CLOSING);
     if (_close_cb) {
         _close_cb(con);
     }
+    removeConnect(con);
 }
 
-void Server::removeConnection(const ConnectionPtr &con) {
-    if (con->GetEvents() != EV_NONE) {
-        closeConnection(con);
-    }
-
+void Server::removeConnect(const ConnectionPtr &con) {
+    // FIXME
     int64_t id = con->GetId();
-    _ref.erase(id);
     con->Remove();
+    _ref.erase(id);
+    con->SetStatus(CLOSED);
 }
 
 void Server::Start() {
