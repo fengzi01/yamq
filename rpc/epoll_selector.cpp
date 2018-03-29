@@ -76,9 +76,9 @@ int EpollSelector::Remove(int fd) {
 }
 
 int EpollSelector::Select(int timeout,vector<Event> &events) {
-    LOG(TRACE) << "Start select. _events.size = " << _events.size();
+    //LOG(TRACE) << "Start select. _events.size = " << _events.size();
     const int n = ::epoll_wait(_epfd,&(*_events.begin()),_events.size(),timeout);
-    LOG(TRACE) << "Select done. n = " << n;
+    //LOG(TRACE) << "Select done. n = " << n;
     if (n > 0) {
         for (int i = 0; i < n; ++i) {
             Event ev = {_trans_epollev_to_ev(_events[i].events),_events[i].data.fd};
@@ -95,7 +95,7 @@ int EpollSelector::Select(int timeout,vector<Event> &events) {
         }
         return 0;
     } else if (0 == n) {
-        LOG(TRACE) << "Nothing happend.";
+        //LOG(TRACE) << "Nothing happend.";
         return 0;
     } else {
         // n < 0

@@ -1,4 +1,9 @@
+#include <arpa/inet.h>
 #include "rpc/socket/socket_utilties.h"
+#include "rpc/socket/server.h"
+#include "log/logging.h"
+#include "rpc/event_dispatcher.h"
+
 void OnConnection(ConnectionPtr con) {
     InetAddr addr = con->GetRemoteSide();
     int fd = con->Getfd();
@@ -8,17 +13,16 @@ void OnConnection(ConnectionPtr con) {
             ntohs(addr.ip_addr.addr4.sin_port), fd);
 }
 
-void OnMessage(ConnectionPtr con,char *buff,int len) {
-    buff[len+1] = '\0';
+void OnMessage(ConnectionPtr con,IoBuffer *buff) {
     InetAddr addr = con->GetRemoteSide();
     int fd = con->Getfd();
     char buf[1024];
     fprintf(stderr,"User layer: on message IPV4 ip = %s, port = %d, socket = %d\n",  
             inet_ntop(AF_INET, &addr.ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
             ntohs(addr.ip_addr.addr4.sin_port), fd);
-    ::fprintf(stderr,"User layer: recv = [%s]\n",buff);
-    (void)con;
-    //con->Send(buf,len);
+    std::string str(buff->GetAllAsString());
+    ::fprintf(stderr,"User layer: recv = [%s]\n",str.c_str());
+    con->Send(str.c_str(),str.length());
 }
 
 void HandleClose(ConnectionPtr con) {
@@ -33,7 +37,7 @@ void HandleClose(ConnectionPtr con) {
 
 int main(int argc,char *argv[])
 {
-    yamq::initLogging(argv[0]);
+//    yamq::initLogging(argv[0]);
     InetAddr addr;
     addr.ip_type = inet_ipv4;
     addr.ip_addr.addr4.sin_family = AF_INET;

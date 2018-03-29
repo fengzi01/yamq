@@ -52,6 +52,8 @@ class IoBuffer {
         int PutString(const std::string &str);
         std::string GetAsString(int n);
 
+        std::string GetAllAsString();
+
         int WritableBytes() { return _buf.size() - _writer_index; }
         int PrependBytes() { return _reader_index; }
         int ReadableBytes() { return _writer_index - _reader_index; } 

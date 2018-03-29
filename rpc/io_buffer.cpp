@@ -157,3 +157,7 @@ std::string IoBuffer::GetAsString(int n) {
     Seek(n);
     return str;
 }
+
+std::string IoBuffer::GetAllAsString() {
+    return GetAsString(ReadableBytes());
+}
