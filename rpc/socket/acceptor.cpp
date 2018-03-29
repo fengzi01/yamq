@@ -110,6 +110,7 @@ Acceptor::~Acceptor() {
 void Acceptor::Listen() {
    listenOrDie(_fd); 
    _listening = true;
+   SetEvents(EV_READ);
 }
 
 void Acceptor::HandleRead() { 
@@ -117,7 +118,6 @@ void Acceptor::HandleRead() {
     int newfd = acceptConnect(_fd,&peeraddr);
     if (_new_conn_cb) {
         _new_conn_cb(newfd,peeraddr);
-        //_conn_cb();
     } else {
         ::close(newfd);
     }

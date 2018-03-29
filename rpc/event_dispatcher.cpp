@@ -161,12 +161,12 @@ void EventDispatcher::CancelTimer(int timer_id) {
     _timer_queue->CancelTimer(timer_id);
 }
 
-bool EventDispatcher::isInLoopThread() const {
+bool EventDispatcher::isInEvd() const {
     return _thread_id == std2::this_thread::GetTid();
 }
 
-void EventDispatcher::RunInLoop(const Functor &cb) {
-    if (isInLoopThread()) {
+void EventDispatcher::RunInEvd(const Functor &cb) {
+    if (isInEvd()) {
         cb();
     } else {
         addPendingFunctor(cb);

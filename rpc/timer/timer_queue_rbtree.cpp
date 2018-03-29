@@ -30,7 +30,7 @@ int TimerQueueRbtree::AddTimer(uint64_t time,uint64_t interval,TimerCallback cb)
     _ref[timer->id] = timer;
 
     // 保证在Loop线程中更新
-    _evd->RunInLoop(std::bind(&TimerQueueRbtree::addTimer,this,timer));
+    _evd->RunInEvd(std::bind(&TimerQueueRbtree::addTimer,this,timer));
     return timer->id;
 }
 
@@ -39,7 +39,7 @@ void TimerQueueRbtree::addTimer(Timer *timer) {
     timer->expire = now + timer->time;
     auto n = ::rbtree_insert(_tree,timer->expire,timer);
     timer->attach = n;
-    if (::rbtree_min(_tree)->key >= timer->expire) {
+    if (::rbtree_min(_tree)->key >= static_cast<long long>(timer->expire)) {
         ::resetTimerfd(_fd,_own_epoch + timer->expire);
     } else {
         // FIXME
@@ -48,7 +48,7 @@ void TimerQueueRbtree::addTimer(Timer *timer) {
 
 void TimerQueueRbtree::CancelTimer(int timer_id) {
     // 保证在Loop线程中更新
-    _evd->RunInLoop(std::bind(&TimerQueueRbtree::cancelTimer,this,timer_id));  
+    _evd->RunInEvd(std::bind(&TimerQueueRbtree::cancelTimer,this,timer_id));  
 }
 
 bool TimerQueueRbtree::cancelTimer(int id) {

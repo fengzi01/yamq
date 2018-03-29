@@ -28,13 +28,13 @@ class EventDispatcher {
         void CancelTimer(int timer_id);
 
         void Wakeup();
-        void RunInLoop(const Functor &cb); 
+        void RunInEvd(const Functor &cb); 
     private:
         Channel* findChannel(int fd);
         void runPendingFunctor();
         void addPendingFunctor(const Functor &cb);
 
-        bool isInLoopThread() const;
+        bool isInEvd() const;
 
         std::atomic<bool> _stop;
         unique_ptr<Selector> _selector;  // for virtual function

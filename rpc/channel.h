@@ -34,12 +34,17 @@ class Channel {
 
         /* 暂时这么简陋吧 */
         void SetEvents(int events) { _events = events;Update();}
-        int GetEvents() {return _events;}
+        int GetEvents() const { return _events; }
 
         bool Attached() {return _attached;}
 
         /* event dispatcher expose, beause maybe use AddTimer or etc. */
         EventDispatcher *GetEvd();
+    protected:
+        void DisableWrite() { SetEvents(_events & (~EV_WRITE)); }
+        void EnableWrite() { SetEvents(_events | EV_WRITE); }
+
+        bool IsWritable() { return _events & EV_WRITE; }
     protected:
         int _fd;
         int _events;

@@ -1,17 +1,4 @@
-#include <iostream>
-#include <memory>
-
-#include "rpc/event_dispatcher.h"
-#include "rpc/selector.h"
-#include "rpc/socket/acceptor.h"
-#include <arpa/inet.h>
-#include <string.h>
-#include <unistd.h>
-#include "log/logging.h"
-
-#include "rpc/socket/server.h"
-#include <stdio.h>
-
+#include "rpc/socket/socket_utilties.h"
 void OnConnection(ConnectionPtr con) {
     InetAddr addr = con->GetRemoteSide();
     int fd = con->Getfd();
@@ -53,7 +40,9 @@ int main(int argc,char *argv[])
     addr.ip_addr.addr4.sin_port = htons(8081);
     addr.ip_addr.addr4.sin_addr.s_addr = INADDR_ANY;
 
-    Server server(addr);
+    EventDispatcher evd;
+
+    Server server(&evd,addr);
     server.SetConnectCb(OnConnection);
     server.SetMessageCb(OnMessage);
     server.SetCloseCb(HandleClose);

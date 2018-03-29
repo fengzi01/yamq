@@ -11,7 +11,7 @@ Server::Server(EventDispatcher *evd,const InetAddr &addr):
     _acceptor(new Acceptor(evd,addr)) 
 {
     // set acceptor ConnectionCb to Server createConnection
-    _acceptor->SetConnectCb(
+    _acceptor->SetNewConnectCb(
             std::bind(&Server::newConnect,
                 this,
                 std::placeholders::_1,
@@ -42,20 +42,20 @@ void Server::newConnect(int sockfd,const InetAddr &peeraddr) {
     ConnectionPtr con = std::make_shared<Connection>(id,_evd,sockfd,_acceptor->GetInetAddr(),peeraddr);
     con->SetMessageCb(_message_cb);
     con->SetCloseCb(std::bind(&Server::closeConnect,this,std::placeholders::_1));
-    con->SetEvents(EV_READ);
+    con->SetEvents(EV_READ); // start read!
 
     _connections[id] = con;
+
+    con->establish();
 
     if (_connect_cb) {
         _connect_cb(con);
     }
-    con->SetStatus(CONNECTED);
 }
 
 void Server::closeConnect(const ConnectionPtr &con) {
     // FIXME
     con->SetEvents(EV_NONE);
-    con->SetStatus(CLOSING);
     if (_close_cb) {
         _close_cb(con);
     }
@@ -67,12 +67,10 @@ void Server::removeConnect(const ConnectionPtr &con) {
     int64_t id = con->GetId();
     con->Remove();
     _connections.erase(id);
-    con->SetStatus(CLOSED);
 }
 
 void Server::Start() {
     _acceptor->Listen();
-    _acceptor->SetEvents(EV_READ);
     _evd->Start();
 }
 

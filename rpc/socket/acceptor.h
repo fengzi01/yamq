@@ -13,7 +13,7 @@ class Acceptor : public Channel {
         virtual void HandleRead() override;
 
         void Listen();
-        void SetConnectCb(const NewConnectCallback &cb) { _new_conn_cb = cb;}
+        void SetNewConnectCb(const NewConnectCallback &cb) { _new_conn_cb = cb;}
         const InetAddr & GetInetAddr() const {return _inet_addr;} 
     private:
         bool _listening;
