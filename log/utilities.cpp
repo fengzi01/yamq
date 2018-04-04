@@ -29,6 +29,7 @@ Timestamp nowTime(ReadableTime *tm) {
 Tid getTid() {
     return static_cast<Tid>(getpid());
 }
+
 char g_projectName[256];
 char g_projectDirname[1024];
 

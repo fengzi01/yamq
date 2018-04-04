@@ -3,6 +3,7 @@
 #include "log/logfile.h"
 #include "log/asynclogging.h"
 #include "log/debug/stacktrace.h"
+#include "base/std/thread.h"
 
 namespace yamq {
 
@@ -83,7 +84,7 @@ void LogCapture::add_prefix() {
         // FIXME ? offset not equal 22 ?
         buf.offset(len-1);
     }
-    _stream << " " << static_cast<int>(getTid()) << " ";
+    _stream << " " << static_cast<int>(std2::this_thread::GetTid()) << " ";
     _stream << ::strstr(_file,"yamq") << ":" << _line << "] "; 
 }
 

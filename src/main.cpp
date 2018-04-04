@@ -9,7 +9,7 @@ static void mysleep(int ms)
 
 int main(int argc, char *argv[])
 {
-    yamq::initLogging(argv[0]);
+//    yamq::initLogging(argv[0]);
     while (true) {
         LOG(TRACE) << "hello world";
         LOG(INFO) << "hello world";

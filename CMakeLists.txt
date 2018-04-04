@@ -27,6 +27,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin")
 
+file(GLOB_RECURSE BASE_SOURCES "${PROJECT_SOURCE_DIR}/base/*.cpp")
+file(GLOB_RECURSE BASE_HEADERS "${PROJECT_SOURCE_DIR}/base/*.h")
+
 file(GLOB_RECURSE LOG_SOURCES "${PROJECT_SOURCE_DIR}/log/*.cpp")
 file(GLOB_RECURSE LOG_HEADERS "${PROJECT_SOURCE_DIR}/log/*.h")
 
@@ -46,6 +49,7 @@ endif()
 
 # submodule
 #add_executable(${PROJECT_NAME} ${SRC_SOURCES})
+add_subdirectory(base)
 add_subdirectory(log)
 add_subdirectory(rpc)
 #add_subdirectory(di)
@@ -62,7 +66,6 @@ if(test)
     MESSAGE(STATUS "Test : " ${test})
     add_subdirectory(tests)
 endif()
-
 
 ## INSTALL
 set(CMAKE_INSTALL_PREFIX /usr/local)
