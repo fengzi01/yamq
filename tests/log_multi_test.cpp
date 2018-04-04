@@ -2,6 +2,8 @@
 #include "log/logging.h"
 
 #include "base/std/thread.h"
+#include <vector>
+#include <memory>
 
 static void mysleep(int ms)
 {
@@ -24,9 +26,9 @@ void threadFunc() {
 int main(int argc, char *argv[])
 {
     int n = 5;
-    std::vector<std::unique_ptr<std2::Thread>> vec;
+    std2::Thread *vec[n];
     for (int i = 0; i < n; ++i) {
-        vec[i].reset(new std2::Thread(threadFunc));
+        vec[i] = new std2::Thread(threadFunc);
     }
     for (int i = 0; i < n; ++i) {
         vec[i]->Join();
