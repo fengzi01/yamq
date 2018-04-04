@@ -1,6 +1,5 @@
-#include "ThreadPool.h"
-
-namespace std1 {
+#include "base/thread_pool.h"
+namespace std2 {
 void ThreadPool::threadFunc() {
     for(;;) {
         Task task;
@@ -39,7 +38,7 @@ ThreadPool::~ThreadPool() {
     }
     _readyCondition.notify_all();
     for (auto ptr =  _workers.begin();ptr != _workers.end();++ptr) {
-        (*ptr)->join();
+        (*ptr)->Join();
     }
 }
 

@@ -4,9 +4,9 @@
 #include <mutex>
 #include <condition_variable>
 #include <queue>
-#include "Thread.h"
+#include "base/std/thread.h"
 
-namespace std1 {
+namespace std2 {
 class ThreadPool {
     public:
         typedef std::function<void()> Task;
@@ -28,7 +28,7 @@ class ThreadPool {
         std::condition_variable _readyCondition;
         std::condition_variable _fullCondition;
 
-        std::vector< std::unique_ptr<std1::Thread> > _workers;
+        std::vector< std::unique_ptr<std2::Thread> > _workers;
         std::queue< Task > _tasks;
         bool _stop;
 

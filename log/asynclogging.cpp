@@ -36,7 +36,7 @@ LogWorker::LogWorker(size_t bufSize,size_t intval,std::string dirname,std::strin
     _stop(false),
     _flushInterval(intval),
     _output(new LogFile(dirname.c_str(),filename.c_str())), 
-    _backend(new std1::Thread(std::bind(&LogWorker::threadFunc,this))) {
+    _backend(new std2::Thread(std::bind(&LogWorker::threadFunc,this))) {
         _buffersAvailiable.reserve(bufSize);
         for ( size_t i = 0; i < bufSize; ++i )  {
             _buffersAvailiable.push_back(BufferPtr(new Buffer()));
@@ -49,7 +49,7 @@ LogWorker::~LogWorker() {
         _stop = true;
         _condition.notify_one();
     }
-    _backend->join();
+    _backend->Join();
 }
 
 /* 消费者线程 */

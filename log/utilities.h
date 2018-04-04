@@ -25,8 +25,5 @@ const char *getProjectDirname();
 
 bool initUtilities(const char *argv0);
 
-/* 获取当前进程id */
-Tid getTid();
-
 } // yamq
 #endif /* ifndef YAMQ_UTILITIES */

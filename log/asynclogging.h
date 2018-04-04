@@ -2,7 +2,8 @@
 #define YAMQ_ASYNC_LOGGING 
 #include <stddef.h>
 #include "log/logstream.h"
-#include "log/Thread.h"
+//#include "log/Thread.h"
+#include "base/std/thread.h"
 #include <vector>
 #include <mutex>
 #include <condition_variable>
@@ -57,7 +58,7 @@ class LogWorker {
         const size_t _flushInterval; // milliseconds 毫秒
 
         std::unique_ptr<LogFile> _output;
-        std::unique_ptr<std1::Thread> _backend;        
+        std::unique_ptr<std2::Thread> _backend;        
 };
 } // log
 } // yamq
