@@ -1,0 +1,28 @@
+#include "stacktrace.h"
+#include <iostream>
+
+namespace ns1 {
+    class A {
+        public:
+        void func();
+    };
+
+    void A::func() {
+        char buf[10000];
+        debug::stacktrace_options opt = {0,0,0};
+        size_t n = debug::stacktrace_write(buf,10000,&opt); 
+        std::string str(buf,n);
+        std::cout << str;
+
+        std::cout << "----------------------------" << std::endl;
+
+        std::string debug = debug::stacktrace(&opt);
+
+        std::cout << debug;
+    }
+}
+
+int main() {
+    ns1::A a;
+    a.func();
+}

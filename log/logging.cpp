@@ -2,6 +2,7 @@
 #include "utilities.h"
 #include "log/logfile.h"
 #include "log/asynclogging.h"
+#include "log/debug/stacktrace.h"
 
 namespace yamq {
 
@@ -58,7 +59,7 @@ bool shutdownLogging() {
 
 namespace log {
 namespace {
-    size_t logtime(char *buf) {
+    size_t formattime(char *buf) {
         size_t len = 22;
         ReadableTime tm;
         Timestamp now = nowTime(&tm);
@@ -69,7 +70,7 @@ namespace {
     }
 }
 
-void LogCapture::addPrefix() {
+void LogCapture::add_prefix() {
     /*
      * Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
      * I170703 22:04:05.242153  6569 glog_test2.cpp:7] Hello,GLOG!
@@ -78,7 +79,7 @@ void LogCapture::addPrefix() {
     buf.append(LogLevelNames[_level],1); // FIXME _level
     
     if (buf.remain() >= 22) {
-        size_t len = logtime(buf.current());
+        size_t len = formattime(buf.current());
         // FIXME ? offset not equal 22 ?
         buf.offset(len-1);
     }
@@ -86,21 +87,27 @@ void LogCapture::addPrefix() {
     _stream << ::strstr(_file,"yamq") << ":" << _line << "] "; 
 }
 
-LogCapture::LogCapture(
-        const char *file, 
-        const int line, 
-        const char *function, 
-        int level
-        ):_file(file),_line(line),_function(function),_level(level) {
+LogCapture::LogCapture(const char *file, int line, const char *function, int level):
+    _file(file),_line(line),_function(function),_level(level) {
     // 添加日志前缀
-    addPrefix();
+    add_prefix();
 }
 
 LogCapture::~LogCapture() {
-    LogStream::Buffer &buf = stream().buffer();
-    buf.append("\n",1);
+    LogStream::Buffer &buffer = stream().buffer();
+    buffer.append("\n",1);
+    if (_level == LOG_FATAL) {
+        char buf[10000];
+        size_t n = ::debug::stacktrace_write(buf,sizeof buf);
+        buffer.append(buf,n);
+    }
     // 析构函数中写入日志存储模块
-    g_loggingSaveFunc(buf.data(),buf.length());
+    g_loggingSaveFunc(buffer.data(),buffer.length());
+
+    if (_level == LOG_FATAL) {
+        g_loggingFlushFunc();
+        abort();
+    }
 }
 
 }//yamq::log

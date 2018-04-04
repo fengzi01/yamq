@@ -58,12 +58,11 @@ class LogCapture final {
     public:
         ~LogCapture();
         LogStream &stream() {return _stream;}
-        LogCapture(const char *file, const int line, 
-                const char *function, int level);
+        LogCapture(const char *file, int line, const char *function, int level);
 
     private:
         /* 添加日志前缀 */
-        void addPrefix();
+        void add_prefix();
         const char *_file;
         const int _line;
         const char *_function;

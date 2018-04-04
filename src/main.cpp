@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
         LOG(INFO) << "hello world";
         LOG(WARNING) << "hello world";
         LOG(ERROR) << "hello world";
+        LOG(FATAL) << "hello world";
     //    mysleep(10);
     }
     yamq::shutdownLogging();
