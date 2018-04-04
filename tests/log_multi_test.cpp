@@ -25,6 +25,7 @@ void threadFunc() {
 
 int main(int argc, char *argv[])
 {
+    yamq::initLogging(argv[0]);
     int n = 5;
     std2::Thread *vec[n];
     for (int i = 0; i < n; ++i) {
