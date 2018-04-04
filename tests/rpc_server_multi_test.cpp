@@ -1,6 +1,6 @@
 #include <arpa/inet.h>
 #include "rpc/tcp/socket_utilties.h"
-#include "rpc/tcp/server.h"
+#include "rpc/tcp/server_multi.h"
 #include "log/logging.h"
 #include "rpc/event_dispatcher.h"
 
@@ -46,7 +46,7 @@ int main(int argc,char *argv[])
 
     EventDispatcher evd;
 
-    Server server(&evd,addr);
+    multi::Server server(&evd,addr,10);
     server.SetConnectCb(OnConnection);
     server.SetMessageCb(OnMessage);
     server.SetCloseCb(HandleClose);

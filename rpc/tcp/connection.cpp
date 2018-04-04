@@ -1,4 +1,4 @@
-#include "rpc/socket/connection.h"
+#include "rpc/tcp/connection.h"
 #include "log/logging.h"
 #include "unistd.h"
 #include <sys/types.h>

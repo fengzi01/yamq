@@ -1,9 +1,9 @@
-#include "rpc/socket/server.h"
+#include "rpc/tcp/server.h"
 #include "rpc/event_dispatcher.h"
-#include "rpc/socket/acceptor.h"
+#include "rpc/tcp/acceptor.h"
 #include "rpc/selector.h"
 #include <arpa/inet.h>  // inet_ntop
-#include "rpc/socket/connection.h"
+#include "rpc/tcp/connection.h"
 
 Server::Server(EventDispatcher *evd,const InetAddr &addr):
     _next_id(0),

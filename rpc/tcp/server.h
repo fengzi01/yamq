@@ -1,7 +1,10 @@
 #pragma once
-#include "rpc/socket/acceptor.h"
-#include "rpc/socket/connection.h"
+#include "rpc/tcp/acceptor.h"
+#include "rpc/tcp/connection.h"
+#include "base/std/Thread.h"
 #include <unordered_map>
+#include <atomic>
+#include <assert.h>
 
 class Server {
     public:
@@ -18,6 +21,7 @@ class Server {
 
         void Start();
         const ConnectionPtr& GetConnection(int64_t id) {return _connections[id];}
+
     private:
         void newConnect(int sockfd,const InetAddr &peeraddr);
         void closeConnect(const ConnectionPtr &);
