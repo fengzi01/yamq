@@ -2,6 +2,13 @@
 #include "rpc/event_dispatcher.h"
 #include "log/logging.h"
 
+Channel::Channel(EventDispatcher *evd,int fd) : _fd(fd),_events(EV_NONE),_evd(evd),_attached(false){
+    LOG(TRACE) << "Channel Create fd = " << _fd << ", attach = " << _attached;
+}
+Channel::Channel(): _events(EV_NONE), _attached(false) {
+    LOG(TRACE) << "Channel Create fd = " << _fd << ", attach = " << _attached;
+}
+
 void Channel::HandleEvent(Event &ev) { 
     LOG(TRACE) << "Handle event, fd = " << ev.fd << ", ev = " << ev.revents;
     if ( ev.revents == EV_NONE) {

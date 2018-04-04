@@ -53,25 +53,24 @@ bool initLogging(const char *argv0) {
     return true;
 }
 
+static size_t _format_time(char *buf) {
+    size_t len = 22;
+    ReadableTime tm;
+    Timestamp now = nowTime(&tm);
+    uint32_t microSeconds = now % 1000000;
+    // 170703 22:04:05.242153
+    snprintf(buf,len,"%02d%02d%02d %02d:%02d:%02d.%06d",tm.tm_year,tm.tm_mon,tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec,microSeconds);
+    return len;
+}
 
 bool shutdownLogging() {
     return true;
 }
 
-namespace log {
-namespace {
-    size_t formattime(char *buf) {
-        size_t len = 22;
-        ReadableTime tm;
-        Timestamp now = nowTime(&tm);
-        uint32_t microSeconds = now % 1000000;
-        // 170703 22:04:05.242153
-        snprintf(buf,len,"%02d%02d%02d %02d:%02d:%02d.%06d",tm.tm_year,tm.tm_mon,tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec,microSeconds);
-        return len;
-    }
-}
 
-void LogCapture::add_prefix() {
+namespace log {
+
+void LogCapture::formatPrefix() {
     /*
      * Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
      * I170703 22:04:05.242153  6569 glog_test2.cpp:7] Hello,GLOG!
@@ -80,18 +79,19 @@ void LogCapture::add_prefix() {
     buf.append(LogLevelNames[_level],1); // FIXME _level
     
     if (buf.remain() >= 22) {
-        size_t len = formattime(buf.current());
+        size_t len = _format_time(buf.current());
         // FIXME ? offset not equal 22 ?
         buf.offset(len-1);
     }
     _stream << " " << static_cast<int>(std2::this_thread::GetTid()) << " ";
-    _stream << ::strstr(_file,"yamq") << ":" << _line << "] "; 
+    //_stream << ::strstr(_file,"yamq") << ":" << _line << "] "; 
+    _stream << _file << ":" << _line << "] "; 
 }
 
 LogCapture::LogCapture(const char *file, int line, const char *function, int level):
     _file(file),_line(line),_function(function),_level(level) {
     // 添加日志前缀
-    add_prefix();
+    formatPrefix();
 }
 
 LogCapture::~LogCapture() {

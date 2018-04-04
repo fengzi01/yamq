@@ -46,7 +46,7 @@ int main(int argc,char *argv[])
 
     EventDispatcher evd;
 
-    multi::Server server(&evd,addr,10);
+    multi::Server server(&evd,addr,2);
     server.SetConnectCb(OnConnection);
     server.SetMessageCb(OnMessage);
     server.SetCloseCb(HandleClose);

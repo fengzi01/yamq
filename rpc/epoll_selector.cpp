@@ -69,6 +69,7 @@ int EpollSelector::Update(int fd,int events) {
 int EpollSelector::Remove(int fd) {
     struct epoll_event event;
     int ret = 0;
+    LOG(TRACE) << "Rmove channel. fd = " << fd;
     if ((ret = ::epoll_ctl(_epfd,EPOLL_CTL_DEL,fd,&event)) < 0) {
         LOG(FATAL) << "epoll del fail. fd = " << fd;
     }
@@ -83,7 +84,7 @@ int EpollSelector::Select(int timeout,vector<Event> &events) {
         for (int i = 0; i < n; ++i) {
             Event ev = {_trans_epollev_to_ev(_events[i].events),_events[i].data.fd};
             events.push_back(ev);
-            LOG(TRACE) << "event: fd = " << ev.fd << " revents = " << ev.revents;
+            LOG(TRACE) << "Receive event: fd = " << ev.fd << " revents = " << ev.revents;
         }
         if (static_cast<int>(_events.size()) == n) {
             LOG(TRACE) << "resize events.size to two times. size = " << 2*n;

@@ -82,11 +82,10 @@ void Server::newConnect(int sockfd,const InetAddr &peeraddr) {
     ConnectionPtr con = std::make_shared<Connection>(id,evd,sockfd,_acceptor->GetInetAddr(),peeraddr);
     con->SetMessageCb(_message_cb);
     con->SetCloseCb(std::bind(&Server::closeConnect,this,std::placeholders::_1));
-    con->SetEvents(EV_READ); // start read!
+
+    evd->RunInEvd(std::bind(&Connection::establish,con));
 
     _connections[id] = con;
-
-    con->establish();
 
     if (_connect_cb) {
         _connect_cb(con);

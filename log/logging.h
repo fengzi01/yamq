@@ -61,8 +61,7 @@ class LogCapture final {
         LogCapture(const char *file, int line, const char *function, int level);
 
     private:
-        /* 添加日志前缀 */
-        void add_prefix();
+        void formatPrefix();
         const char *_file;
         const int _line;
         const char *_function;

@@ -38,7 +38,7 @@ class Connection : public Channel, public std::enable_shared_from_this<Connectio
         const InetAddr & GetRemoteSide() const { return _remote_side; }
         const InetAddr & GetLocalSide() const { return _local_side; }
     private:
-        void establish() { _status = CONNECTED; }
+        void establish() { EnableRead();_status = CONNECTED; }
         void send(const char *data,size_t len);
         
     private:

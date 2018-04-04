@@ -33,7 +33,7 @@ static int createAcceptSocketOrDie(InetAddr &addr)
     }
     if (ret < 0)
     {
-        LOG(FATAL) << "sockets::bindOrDie";
+        LOG(FATAL) << "Socket bind fail. port = " << ntohs(addr.ip_addr.addr6.sin6_port);
         exit(-1);
     }
     return sockfd;
@@ -47,7 +47,7 @@ static int listenOrDie(int fd) {
     return ret;
 }
 
-static int acceptConnect(int sockfd, InetAddr *addr)
+static int _accept_connect(int sockfd, InetAddr *addr)
 {
     socklen_t addr_len = static_cast<socklen_t>(sizeof addr->ip_addr);
     int connfd = ::accept4(sockfd, (struct sockaddr *)&addr->ip_addr,
@@ -85,11 +85,11 @@ static int acceptConnect(int sockfd, InetAddr *addr)
     }
     char buf[1024];
     if (addr->ip_type == inet_ipv4) {
-        fprintf(stderr,"New connection IPV4 ip = %s, port = %d, socket = %d\n",  
+        fprintf(stderr,"Acceptor: new connection IPV4 ip = %s, port = %d, socket = %d\n",  
                 inet_ntop(AF_INET, &addr->ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
                 ntohs(addr->ip_addr.addr4.sin_port), connfd);
     } else {
-        fprintf(stderr,"New connection IPV6 from %s, port %d, socket %d\n",  
+        fprintf(stderr,"Acceptor: new connection IPV6 from %s, port %d, socket %d\n",  
                 inet_ntop(AF_INET6, &addr->ip_addr.addr6.sin6_addr, buf, sizeof(buf)), // IPv6  
                 ntohs(addr->ip_addr.addr6.sin6_port), connfd);
     }
@@ -115,7 +115,7 @@ void Acceptor::Listen() {
 
 void Acceptor::HandleRead() { 
     InetAddr peeraddr = {_inet_addr.ip_type};
-    int newfd = acceptConnect(_fd,&peeraddr);
+    int newfd = _accept_connect(_fd,&peeraddr);
     if (_new_conn_cb) {
         _new_conn_cb(newfd,peeraddr);
     } else {

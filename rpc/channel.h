@@ -6,6 +6,7 @@ class Socket;
 class Channel;
 
 const int EV_NONE = 0x00,EV_READ = 0x01,EV_WRITE = 0x02,EV_UNKNOWN = 0x04,EV_ERROR = 0x08, EV_CLOSE = 0x10;
+
 /* IO事件 */
 struct Event {
     int revents;
@@ -19,8 +20,8 @@ struct Event {
 /* 负责分发IO事件 */
 class Channel {
     public:
-        Channel(EventDispatcher *evd,int fd) : _fd(fd),_events(EV_NONE),_evd(evd),_attached(false){}
-        Channel() {}
+        Channel(EventDispatcher *evd,int fd);
+        Channel();
         virtual void HandleEvent(Event &);
         
         virtual void HandleRead() {}
@@ -43,6 +44,8 @@ class Channel {
     protected:
         void DisableWrite() { SetEvents(_events & (~EV_WRITE)); }
         void EnableWrite() { SetEvents(_events | EV_WRITE); }
+
+        void EnableRead() { SetEvents(_events | EV_READ); }
 
         bool IsWritable() { return _events & EV_WRITE; }
     protected:
