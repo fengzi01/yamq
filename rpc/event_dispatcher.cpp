@@ -58,8 +58,8 @@ EventDispatcher::~EventDispatcher() {
 }
 
 void EventDispatcher::Start() {
-    _wakeup_channel->SetEvents(EV_READ);
-    _timer_queue->SetEvents(EV_READ);
+    _wakeup_channel->EnableRead();
+    _timer_queue->EnableRead();
     vector<Event> events;
     // loop
     for(;;) {
@@ -68,11 +68,11 @@ void EventDispatcher::Start() {
         for (auto it = events.begin(); it != events.end(); ++it) {
             Channel *channel = findChannel(it->fd);
             if (nullptr != channel) {
-                LOG(TRACE) << "get a channel = " << channel << ",fd = " << it->fd;
+                //LOG(TRACE) << "get a channel = " << channel << ",fd = " << it->fd;
                 channel->HandleEvent(*it);
             } else {
                 LOG(WARNING) << "Found fd which don't have Channel.fd = " << it->fd;
-                exit(-1); 
+                _selector->Remove(it->fd);
             }
         } 
         runPendingFunctor();
@@ -92,7 +92,7 @@ void EventDispatcher::Stop() {
 int EventDispatcher::RegisterChannel(Channel *channel) {
     int fd = channel->Getfd();
     _selector->Add(fd,channel->GetEvents());
-    _ref.insert(std::make_pair(fd,channel));
+    _channels.insert(std::make_pair(fd,channel));
     return 0;
 }
 
@@ -104,20 +104,20 @@ int EventDispatcher::UpdateChannel(Channel *channel) {
 
 // Never call in another thread!
 int EventDispatcher::RemoveChannel(Channel *channel) {
-    auto it = _ref.find(channel->Getfd());
+    auto it = _channels.find(channel->Getfd());
     assert(it->second == channel);
 
     int fd = channel->Getfd();
     LOG(TRACE) << "Rmove channel. fd = " << fd;
 
     _selector->Remove(fd);
-    _ref.erase(fd);
+    _channels.erase(fd);
     return 0;
 }
 
 Channel *EventDispatcher::findChannel(int fd) {
-    auto it = _ref.find(fd);
-    if (it == _ref.end()) {
+    auto it = _channels.find(fd);
+    if (it == _channels.end()) {
         return nullptr;
     }
     return it->second;
@@ -165,7 +165,7 @@ bool EventDispatcher::isInEvd() const {
     return _thread_id == std2::this_thread::GetTid();
 }
 
-void EventDispatcher::RunInEvd(const Functor &cb) {
+void EventDispatcher::RunInEvd(Functor &&cb) {
     if (isInEvd()) {
         cb();
     } else {

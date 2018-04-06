@@ -27,7 +27,7 @@ void Connection::HandleRead() {
             _message_cb(shared_from_this(),_input_buf.get());
         }
     } else if ( 0 == n ) {
-        LOG(TRACE) << "connection is going to close fd = " << _fd;
+        LOG(TRACE) << "Connection: connect is going to close. fd = " << _fd;
         _status = CLOSING;
         if (_close_cb) {
             _close_cb(shared_from_this());
@@ -48,7 +48,7 @@ void Connection::HandleWrite() {
 		}
 	} else {
         int serrno = errno;
-        LOG(TRACE) << "connection write error. errno = " << serrno;
+        LOG(WARNING) << "connection write error. errno = " << serrno;
         HandleError();
 	}
 }
@@ -72,7 +72,7 @@ void Connection::send(const char *data,size_t len) {
 		if (nwritten >= 0) {
 			remaining = len - nwritten;
 			if (remaining == 0) {
-                LOG(TRACE) << "write complete";
+                LOG(TRACE) << "write complete. written = " << nwritten;
 			}
 		} else {
 			int serrno = errno;
@@ -86,14 +86,13 @@ void Connection::send(const char *data,size_t len) {
 	}
 
 	if (remaining > 0) {
-		size_t old_len = _output_buf->ReadableBytes();
+		//size_t old_len = _output_buf->ReadableBytes();
 
 		//if (old_len + remaining >= high_water_mark_
 		//        && old_len < high_water_mark_
 		//        && high_water_mark_fn_) {
 		//    loop_->QueueInLoop(std::bind(high_water_mark_fn_, shared_from_this(), old_len + remaining));
 		//}
-
 		_output_buf->Put(static_cast<const char*>(data) + nwritten, remaining);
 		if (!IsWritable()) {
 			EnableWrite();

@@ -85,8 +85,7 @@ int main(int argc, char *argv[]) {
     int fd2 = CreateSocketfd();
     TestChannel channel(&evd,fd2);
     unique_ptr<Channel> pChannel(new TestChannel(&evd,fd));
-    channel.SetEvents(EV_WRITE);
-    pChannel->SetEvents(EV_WRITE);
-
+    channel.EnableWrite();
+    pChannel->EnableWrite();
     evd.Start();
 }

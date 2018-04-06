@@ -2,6 +2,7 @@
 #include "rpc/event_dispatcher.h"
 #include <assert.h>
 #include "log/logging.h"
+#include "rpc/tcp/acceptor.h"
 
 namespace multi {
 IoWorker::IoWorker():_running(false),
@@ -29,7 +30,7 @@ EventDispatcher *IoWorker::GetEvd() {
 }
 
 Server::Server(EventDispatcher *evd,const InetAddr &addr,size_t worker_num):
-    _next_id(0),
+    _next_id(1),
     _evd(evd),
     _acceptor(new Acceptor(evd,addr)),
     _next_evd_id(0),
@@ -51,7 +52,7 @@ int64_t Server::nextId() {
     int64_t id = _next_id;
     for (;;) {
         if (id < 0) {
-            id = 0;
+            id = 1;
         }
         if (_connections.count(id) > 0) {
             ++id;
@@ -82,19 +83,15 @@ void Server::newConnect(int sockfd,const InetAddr &peeraddr) {
     ConnectionPtr con = std::make_shared<Connection>(id,evd,sockfd,_acceptor->GetInetAddr(),peeraddr);
     con->SetMessageCb(_message_cb);
     con->SetCloseCb(std::bind(&Server::closeConnect,this,std::placeholders::_1));
-
     evd->RunInEvd(std::bind(&Connection::establish,con));
-
+    LOG(TRACE) << "Add connect. connect_id = " << id;
     _connections[id] = con;
-
     if (_connect_cb) {
         _connect_cb(con);
     }
 }
 
 void Server::closeConnect(const ConnectionPtr &con) {
-    // FIXME
-    con->SetEvents(EV_NONE);
     if (_close_cb) {
         _close_cb(con);
     }
@@ -102,25 +99,27 @@ void Server::closeConnect(const ConnectionPtr &con) {
 }
 
 void Server::removeConnect(const ConnectionPtr &con) {
-    // FIXME
-    int64_t id = con->GetId();
-    con->Remove();
-    _connections.erase(id);
+    con->GetEvd()->RunInEvd(std::bind(&Channel::Remove,con));
+    _evd->RunInEvd(
+        [this,con] () {
+            int64_t id = con->GetId();
+            LOG(TRACE) << "Remove connect. connect_id = " << id;
+            _connections.erase(id);
+        }
+    );
 }
 
 void Server::Start() {
     LOG(TRACE) << "starting";
     assert(!_running);
     for (size_t i = 0; i < _worker_num; ++i) {
-        LOG(TRACE) << "new worker";
         auto worker = std::unique_ptr<IoWorker>(new IoWorker());
         _evds.push_back(worker->GetEvd());
         _workers.push_back(std::move(worker));
     }
     _acceptor->Listen();
-    _evd->Start();
     _running = true;
-    LOG(TRACE) << "started";
+    _evd->Start();
 }
 
 } // multi

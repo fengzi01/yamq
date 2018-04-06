@@ -1,10 +1,14 @@
 #pragma once
-#include "rpc/tcp/acceptor.h"
+//#include "rpc/tcp/acceptor.h"
 #include "rpc/tcp/connection.h"
 #include "base/std/Thread.h"
 #include <unordered_map>
 #include <atomic>
 #include <assert.h>
+#include <memory>
+
+class Acceptor;
+class EventDispatcher;
 
 // 主reactor + 多个子reactor范例
 // 主reactor监听并选出一个reactor作为通信reactor

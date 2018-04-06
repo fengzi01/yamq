@@ -28,7 +28,7 @@ class EventDispatcher {
         void CancelTimer(int timer_id);
 
         void Wakeup();
-        void RunInEvd(const Functor &cb); 
+        void RunInEvd(Functor &&cb); 
     private:
         Channel* findChannel(int fd);
         void runPendingFunctor();
@@ -38,7 +38,7 @@ class EventDispatcher {
 
         std::atomic<bool> _stop;
         unique_ptr<Selector> _selector;  // for virtual function
-        std::unordered_map<int,Channel *> _ref;
+        std::unordered_map<int,Channel *> _channels;
 
         unique_ptr<TimerQueueRbtree> _timer_queue;
         // FIXME or pipe ? 

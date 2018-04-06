@@ -17,11 +17,12 @@ void OnMessage(ConnectionPtr con,IoBuffer *buff) {
     InetAddr addr = con->GetRemoteSide();
     int fd = con->Getfd();
     char buf[1024];
-    fprintf(stderr,"User layer: on message IPV4 ip = %s, port = %d, socket = %d\n",  
+    fprintf(stderr,"User layer[%d]: on message IPV4 ip = %s, port = %d, socket = %d\n",  
+            std2::this_thread::GetTid(),
             inet_ntop(AF_INET, &addr.ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
             ntohs(addr.ip_addr.addr4.sin_port), fd);
     std::string str(buff->GetAllAsString());
-    ::fprintf(stderr,"User layer: recv = [%s]\n",str.c_str());
+    ::fprintf(stderr,"User layer[%d]: recv = [%s]\n",std2::this_thread::GetTid(),str.c_str());
     con->Send(str.c_str(),str.length());
 }
 
@@ -29,7 +30,8 @@ void HandleClose(ConnectionPtr con) {
     InetAddr addr = con->GetRemoteSide();
     int fd = con->Getfd();
     char buf[1024];
-    fprintf(stderr,"User layer: on close IPV4 ip = %s, port = %d, socket = %d\n",  
+    fprintf(stderr,"User layer[%d]: on close IPV4 ip = %s, port = %d, socket = %d\n",  
+            std2::this_thread::GetTid(),
             inet_ntop(AF_INET, &addr.ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
             ntohs(addr.ip_addr.addr4.sin_port), fd);
 

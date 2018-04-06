@@ -4,7 +4,7 @@
 #include <arpa/inet.h>  // inet_ntop
 #include <unistd.h>
 
-static int createAcceptSocketOrDie(InetAddr &addr)
+static int _create_accept_socket(InetAddr &addr)
 {
     /**
      * AF_INET（又称 PF_INET）是 IPv4 网络协议的套接字类型，
@@ -22,24 +22,24 @@ static int createAcceptSocketOrDie(InetAddr &addr)
     {
         LOG(FATAL) << "sockets::createNonblockingOrDie";
     }
-
     LOG(TRACE) << "Create acceptor fd  = " << sockfd;
+
     // bind
     int ret = 0;
     if (addr.ip_type == inet_ipv4) {
+        LOG(TRACE) << "Listen on port = " << ntohs(addr.ip_addr.addr4.sin_port);
         ret = ::bind(sockfd, (struct sockaddr *) &addr.ip_addr, sizeof(struct sockaddr));
     } else {
+        LOG(TRACE) << "Listen on port = " << ntohs(addr.ip_addr.addr6.sin6_port);
         ret = ::bind(sockfd, (struct sockaddr *) &addr.ip_addr, sizeof(struct sockaddr_in6));
     }
-    if (ret < 0)
-    {
+    if (ret < 0) {
         LOG(FATAL) << "Socket bind fail. port = " << ntohs(addr.ip_addr.addr6.sin6_port);
-        exit(-1);
     }
     return sockfd;
 }
 
-static int listenOrDie(int fd) {
+static int _listen_or_die(int fd) {
     int ret = 0;
     if ((ret = ::listen(fd,SOMAXCONN)) < 0 ) {
         LOG(FATAL) << "listenOrDie fd = " << fd;
@@ -83,15 +83,16 @@ static int _accept_connect(int sockfd, InetAddr *addr)
                 break;
         }
     }
-    char buf[1024];
+    char ip_buf[1024];
+    char buf[2048];
     if (addr->ip_type == inet_ipv4) {
-        fprintf(stderr,"Acceptor: new connection IPV4 ip = %s, port = %d, socket = %d\n",  
-                inet_ntop(AF_INET, &addr->ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
-                ntohs(addr->ip_addr.addr4.sin_port), connfd);
+        inet_ntop(AF_INET, &addr->ip_addr.addr4.sin_addr, ip_buf, sizeof(ip_buf));
+        snprintf(buf,sizeof buf,"Acceptor: new ipv4 connection. ip = [%s], port = [%d], socket = %d",ip_buf,ntohs(addr->ip_addr.addr4.sin_port),connfd);
+        LOG(TRACE) << buf;
     } else {
-        fprintf(stderr,"Acceptor: new connection IPV6 from %s, port %d, socket %d\n",  
-                inet_ntop(AF_INET6, &addr->ip_addr.addr6.sin6_addr, buf, sizeof(buf)), // IPv6  
-                ntohs(addr->ip_addr.addr6.sin6_port), connfd);
+        inet_ntop(AF_INET6, &addr->ip_addr.addr6.sin6_addr, ip_buf, sizeof(ip_buf));
+        snprintf(buf,sizeof buf,"Acceptor: new ipv6 connection. ip = [%s], port = [%d], socket = %d",ip_buf,ntohs(addr->ip_addr.addr6.sin6_port),connfd);
+        LOG(TRACE) << buf;
     }
     return connfd;
 }
@@ -100,7 +101,7 @@ Acceptor::Acceptor(EventDispatcher *evd,const InetAddr &addr):
     _listening(false),
     _inet_addr(addr) {
     _evd = evd;
-    _fd = createAcceptSocketOrDie(_inet_addr);
+    _fd = _create_accept_socket(_inet_addr);
 }
 
 Acceptor::~Acceptor() {
@@ -108,9 +109,9 @@ Acceptor::~Acceptor() {
 }
 
 void Acceptor::Listen() {
-   listenOrDie(_fd); 
+   _listen_or_die(_fd); 
    _listening = true;
-   SetEvents(EV_READ);
+   EnableRead();
 }
 
 void Acceptor::HandleRead() { 
