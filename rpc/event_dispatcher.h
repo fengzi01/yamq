@@ -29,6 +29,8 @@ class EventDispatcher {
 
         void Wakeup();
         void RunInEvd(Functor &&cb); 
+
+        void SyncRunInEvd(Functor &&cb);
     private:
         Channel* findChannel(int fd);
         void runPendingFunctor();
@@ -47,6 +49,8 @@ class EventDispatcher {
 
         std::mutex _mutex;
         std::vector<Functor> _pending_functors;
+        std::atomic<bool> _pending_functor_done;
+        std::atomic<bool> _calling_pending_functor;
 
         const int _thread_id;
 };

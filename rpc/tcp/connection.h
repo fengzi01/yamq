@@ -4,6 +4,7 @@
 #include <functional>
 #include "rpc/io_buffer.h"
 #include <memory>
+#include <sstream>
 
 class Connection;
 typedef std::shared_ptr<Connection> ConnectionPtr;
@@ -37,6 +38,19 @@ class Connection : public Channel, public std::enable_shared_from_this<Connectio
         int64_t GetId() { return _id;}
         const InetAddr & GetRemoteSide() const { return _remote_side; }
         const InetAddr & GetLocalSide() const { return _local_side; }
+
+        int ForceClose();
+        int GetStatus() const { return _status; } 
+
+        std::string ToString() {
+            std::ostringstream ss;
+            ss << "connect_id = ";
+            ss << _id;
+            ss << ", status = (";
+            ss << (_status == CONNECTED ? "UP" : "DOWN");
+            ss << "," << _status << ")";
+            return ss.str();
+        }
     private:
         void establish() { EnableRead();_status = CONNECTED; }
         void send(const char *data,size_t len);

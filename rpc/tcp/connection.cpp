@@ -99,3 +99,22 @@ void Connection::send(const char *data,size_t len) {
 		}
 	}
 }
+
+int Connection::ForceClose() {
+    if (_status != CONNECTED) {
+        LOG(WARNING) << "Connect is not connected. fd = " << _fd;
+        return -1;
+    }
+    ConnectionPtr con(shared_from_this());
+    _evd->SyncRunInEvd(
+        [con]() {
+            con->_status = CLOSING;
+            if (con->_close_cb) {
+                con->_close_cb(con);
+            }
+            ::close(con->_fd);
+            con->_status = CLOSED;
+        }
+    );
+    return 0;
+}

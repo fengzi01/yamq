@@ -11,6 +11,16 @@ void OnConnection(ConnectionPtr con) {
     fprintf(stderr,"User layer: new connection IPV4 ip = %s, port = %d, socket = %d\n",  
             inet_ntop(AF_INET, &addr.ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
             ntohs(addr.ip_addr.addr4.sin_port), fd);
+
+    con->GetEvd()->AddTimer(10000,1,
+        [con]() {
+            std2::Thread([con](){
+            LOG(WARNING) << "connect is going to close for timeout. connect_id = " << con->GetId();
+            con->ForceClose();  // too slow ? 
+            LOG(WARNING) << "con->status = " << con->ToString();
+            });
+        }
+    );
 }
 
 void OnMessage(ConnectionPtr con,IoBuffer *buff) {
@@ -35,11 +45,13 @@ void HandleClose(ConnectionPtr con) {
             inet_ntop(AF_INET, &addr.ip_addr.addr4.sin_addr, buf, sizeof(buf)), // IPv6  
             ntohs(addr.ip_addr.addr4.sin_port), fd);
 
+    LOG(TRACE) << "[" << con->ToString() << "]";
+
 }
 
 int main(int argc,char *argv[])
 {
-//    yamq::initLogging(argv[0]);
+    //yamq::initLogging(argv[0]);
     InetAddr addr;
     addr.ip_type = inet_ipv4;
     addr.ip_addr.addr4.sin_family = AF_INET;

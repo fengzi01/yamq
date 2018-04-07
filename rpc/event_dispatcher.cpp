@@ -35,6 +35,7 @@ class WakeupChannel : public Channel {
         virtual void HandleRead() {
             uint64_t one = 1;
             ssize_t n = ::read(_fd, &one, sizeof one);
+            LOG(TRACE) << "wakeup_channel reads " << n << " bytes";
             if (n != sizeof one) {
                 LOG(ERROR) << "wakeup_channel reads " << n << " bytes instead of 8";
                 exit(0);
@@ -47,6 +48,8 @@ EventDispatcher::EventDispatcher():
     _selector(new EpollSelector(this)),
     _timer_queue(new TimerQueueRbtree(this)),
     _wakeup_channel(new WakeupChannel(this)),
+    _pending_functor_done(true),
+    _calling_pending_functor(false),
     _thread_id(std2::this_thread::GetTid())
 {
     _wakeup_fds[1] = 0;
@@ -133,24 +136,28 @@ void EventDispatcher::Wakeup() {
 }
 
 // TODO call AddPendingFunctor in Functor ?
+// DEAD lock
 void EventDispatcher::addPendingFunctor(const Functor &cb) {
     {
         std::lock_guard<std::mutex> guard(_mutex);
         _pending_functors.push_back(cb);
     }
+    _pending_functor_done = false;
 }
 
 void EventDispatcher::runPendingFunctor() {
+    _calling_pending_functor = true;
     std::vector<Functor> functors;
     {
         std::lock_guard<std::mutex> guard(_mutex);
         functors.swap(_pending_functors);
     }
-    for (size_t i = 0; i < functors.size(); ++i)
-    {
-        LOG(TRACE) << "Running functor!!! idx = " << i;
+    for (size_t i = 0; i < functors.size(); ++i) {
+        //LOG(TRACE) << "Running functor!!! idx = " << i;
         functors[i]();
     }
+    _calling_pending_functor = false;
+    _pending_functor_done = true;
 }
 
 int EventDispatcher::AddTimer(int64_t time_ms,int interval,Functor cb) {
@@ -165,12 +172,29 @@ bool EventDispatcher::isInEvd() const {
     return _thread_id == std2::this_thread::GetTid();
 }
 
+// 只有当前IO线程的事件回调中调用queueInLoop才不需要唤醒  
+//  即在handleEvent()中调用queueInLoop 不需要唤醒，因为接下来马上就会执行doPendingFunctors();  
 void EventDispatcher::RunInEvd(Functor &&cb) {
     if (isInEvd()) {
         cb();
     } else {
         addPendingFunctor(cb);
-        Wakeup();
+        if (_calling_pending_functor) {
+            Wakeup();
+        }
+    }
+}
+
+void EventDispatcher::SyncRunInEvd(Functor &&cb) {
+    if (isInEvd()) {
+        cb();
+    } else {
+        addPendingFunctor(cb);
+        if (_calling_pending_functor) {
+            Wakeup();
+        }
+        // FIXME busy loop?
+        while (!_pending_functor_done) {}
     }
 }
 

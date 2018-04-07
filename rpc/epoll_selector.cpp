@@ -100,8 +100,7 @@ int EpollSelector::Select(int timeout,vector<Event> &events) {
         return 0;
     } else {
         // n < 0
-        LOG(FATAL) << "Never arrive here! IO error. n = " << n;
-        exit(-1);
+        LOG(ERROR) << "epoll_wait ret < 0. n = " << n;
         return -1;
     }
     return -1;
