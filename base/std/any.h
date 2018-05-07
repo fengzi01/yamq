@@ -89,7 +89,8 @@ value_type* any_cast(Any* any) {
     if (any->GetType() == typeid(value_type)) {
         return &(static_cast<Any::Holder<value_type>*>(any->_content)->_held);
     }
-    std::cerr << "Can't cast cast " << any->GetType().name() << " to " << typeid(value_type).name() << std::endl;
+    std::cerr << "Can't cast " << any->GetType().name() << " to " << typeid(value_type).name() << std::endl;
+    //return &(static_cast<Any::Holder<value_type>*>(any->_content)->_held);
     return nullptr;
 }
 

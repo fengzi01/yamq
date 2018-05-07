@@ -17,7 +17,7 @@ HttpServer::HttpServer(EventDispatcher *evd,const InetAddr &addr):
         _tcp_server.SetMessageCb(std::bind(&HttpServer::onMessage,this,std::placeholders::_1,std::placeholders::_2));
 }
 void HttpServer::onConnection(const ConnectionPtr &conn) {
-    conn->SetContext(new HttpContext());
+    conn->SetContext(HttpContext());
 }
 
 void HttpServer::onMessage(const ConnectionPtr& conn,
