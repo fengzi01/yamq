@@ -8,6 +8,7 @@
 
 const int IoBuffer::kInitialSize;
 const int IoBuffer::kCheapPrepend;
+const char IoBuffer::kCRLF[] = "\r\n";
 
 IoBuffer::IoBuffer(size_t initial_size):
     _buf(initial_size + kCheapPrepend),

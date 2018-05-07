@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 /* io读取应用层buffer类 */
 class IoBuffer {
@@ -14,14 +15,30 @@ class IoBuffer {
 
         void Put(const char *data,size_t size);
         void Append(const char *data,size_t size);
+        void Append(std::string str) {
+            Append(str.c_str(),str.length());
+        }
         void Prepend(const char *data,size_t size);
 
         /* peek read pointer */
-        const char *Peek() { return begin() + _reader_index; } 
+        const char *Peek() const { return _buf.data() + _reader_index; } 
         /* set read index via offset */
         void Seek(int offset);
 
+        // search
+        const char* findCRLF() const
+        {
+            // FIXME: replace with memmem()?
+            const char *start = Peek();
+            const char *end = start + _writer_index;
+            const char* crlf = std::search(start, end, kCRLF, kCRLF+2);
+            return crlf == end ? NULL : crlf;
+        }
+
         int Get(char *data,size_t size);
+        void GetUntil(const char *end) {
+            Seek(end - Peek());
+        }
 
         /* retrieve from fd,e.g.:socket fd */
         size_t Retrieve(int fd);
@@ -70,5 +87,7 @@ class IoBuffer {
         std::vector<char> _buf;
         int _reader_index;
         int _writer_index;
+
+        static const char kCRLF[];
 };
 #endif /* _IO_BUFFER_H */

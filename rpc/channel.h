@@ -11,10 +11,6 @@ const int EV_NONE = 0x00,EV_READ = 0x01,EV_WRITE = 0x02,EV_UNKNOWN = 0x04,EV_ERR
 struct Event {
     int revents;
     int fd;
-
-    bool Readable() {
-        return revents & EV_READ;
-    }
 };
 
 /* 负责分发IO事件 */

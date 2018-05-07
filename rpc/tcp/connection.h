@@ -3,6 +3,7 @@
 #include "rpc/tcp/socket_utilties.h"
 #include <functional>
 #include "rpc/io_buffer.h"
+#include "base/std/any.h"
 #include <memory>
 #include <sstream>
 
@@ -51,10 +52,12 @@ class Connection : public Channel, public std::enable_shared_from_this<Connectio
             ss << "," << _status << ")";
             return ss.str();
         }
+        void SetContext(std1::Any context) { _context = context; }
+
+        std1::Any *GetContext() { return &_context; }
     private:
         void establish() { EnableRead();_status = CONNECTED; }
         void send(const char *data,size_t len);
-        
     private:
         int64_t _id;
 
@@ -68,4 +71,6 @@ class Connection : public Channel, public std::enable_shared_from_this<Connectio
 
         std::unique_ptr<IoBuffer> _input_buf;
         std::unique_ptr<IoBuffer> _output_buf;
+
+        std1::Any _context;
 };
