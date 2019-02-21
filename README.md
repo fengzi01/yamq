@@ -1,2 +1,2 @@
 # yamq
-Yet another message queue, implemented wich C++.
+Yet another message queue, implemented with C++.
